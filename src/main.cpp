@@ -42,8 +42,6 @@ int main(int argc, char* argv[])
     SetTargetFPS(144);
     rlImGuiSetup(true);
 
-    Texture image = LoadTexture("resources/parrots.png");
-
     ADJUST_CONST_INT(num, 8);
 
     // Main game loop
@@ -63,8 +61,6 @@ int main(int argc, char* argv[])
             ImGui::TextUnformatted(ICON_FA_JEDI);
             ImGui::TextUnformatted(ICON_FA_ARROW_DOWN);
 	    ImGui::Text("Hello #%d", num);
-
-            rlImGuiImage(&image);
         }
         ImGui::End();
 
@@ -87,7 +83,6 @@ int main(int argc, char* argv[])
 
     // De-Initialization
     rlImGuiShutdown();
-    UnloadTexture(image);
     CloseWindow();        // Close window and OpenGL context
 
     return 0;
