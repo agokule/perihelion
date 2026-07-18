@@ -2,10 +2,10 @@
 *
 *   raylib-extras [ImGui] example - Simple Integration
 *
-*	This is a simple ImGui Integration
-*	It is done using C++ but with C style code
-*	It can be done in C as well if you use the C ImGui wrapper
-*	https://github.com/cimgui/cimgui
+*    This is a simple ImGui Integration
+*    It is done using C++ but with C style code
+*    It can be done in C as well if you use the C ImGui wrapper
+*    https://github.com/cimgui/cimgui
 *
 *   Copyright (c) 2021 Jeffery Myers
 *
@@ -13,82 +13,82 @@
 
 #include "raylib.h"
 #include "extras/IconsFontAwesome6.h"
-#include "raymath.h"
+#include "adjust.h"
 
 #include "imgui.h"
 #include "rlImGui.h"
 
 
 // DPI scaling functions
-float ScaleToDPIF(float value)
-{
+float ScaleToDPIF(float value) {
     return GetWindowScaleDPI().x * value;
 }
 
-int ScaleToDPII(int value)
-{
+int ScaleToDPII(int value) {
     return int(GetWindowScaleDPI().x * value);
 }
 
 int main(int argc, char* argv[])
 {
-	// Initialization
-	//--------------------------------------------------------------------------------------
-	int screenWidth = 1280;
-	int screenHeight = 800;
+    // Initialization
+    int screenWidth = 1280;
+    int screenHeight = 800;
 
-	SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-	InitWindow(screenWidth, screenHeight, "Perihelion");
-	SetTargetFPS(144);
-	rlImGuiSetup(true);
+    adjust_init();
 
-	Texture image = LoadTexture("resources/parrots.png");
 
-	// Main game loop
-	while (!WindowShouldClose())    // Detect window close button or ESC key
-	{
-		BeginDrawing();
-		ClearBackground(DARKGRAY);
+    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
+    InitWindow(screenWidth, screenHeight, "Perihelion");
+    SetTargetFPS(144);
+    rlImGuiSetup(true);
 
-		// start ImGui Conent
-		rlImGuiBegin();
+    Texture image = LoadTexture("resources/parrots.png");
 
-		// show ImGui Content
-		bool open = true;
-		ImGui::ShowDemoWindow(&open);
+    ADJUST_CONST_INT(num, 8);
 
-		open = true;
-		if (ImGui::Begin("Test Window", &open))
-		{
-			ImGui::TextUnformatted(ICON_FA_JEDI);
-			ImGui::TextUnformatted(ICON_FA_ARROW_DOWN);
+    // Main game loop
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(DARKGRAY);
 
-			rlImGuiImage(&image);
-		}
-		ImGui::End();
+        // start ImGui Conent
+        rlImGuiBegin();
 
-		// end ImGui Content
-		rlImGuiEnd();
+        // show ImGui Content
+        bool open = true;
+        ImGui::ShowDemoWindow(&open);
 
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-			DrawText("Prssed", 0, 0, 20, RED);
+        open = true;
+        if (ImGui::Begin("Test Window", &open)) {
+            ImGui::TextUnformatted(ICON_FA_JEDI);
+            ImGui::TextUnformatted(ICON_FA_ARROW_DOWN);
+	    ImGui::Text("Hello #%d", num);
 
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-			DrawText("Down", 0, 20, 20, GREEN);
+            rlImGuiImage(&image);
+        }
+        ImGui::End();
 
-		if (IsWindowFocused())
-			DrawText("Focused", 100, 20, 20, WHITE);
+	adjust_update();
 
-		EndDrawing();
-		//----------------------------------------------------------------------------------
-	}
+        // end ImGui Content
+        rlImGuiEnd();
 
-	// De-Initialization
-	//--------------------------------------------------------------------------------------   
-	rlImGuiShutdown();
-	UnloadTexture(image);
-	CloseWindow();        // Close window and OpenGL context
-	//--------------------------------------------------------------------------------------
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            DrawText("Prssed", 0, 0, 20, RED);
 
-	return 0;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            DrawText("Down", 0, 20, 20, GREEN);
+
+        if (IsWindowFocused())
+            DrawText("Focused", 100, 20, 20, WHITE);
+
+        EndDrawing();
+    }
+
+    // De-Initialization
+    rlImGuiShutdown();
+    UnloadTexture(image);
+    CloseWindow();        // Close window and OpenGL context
+
+    return 0;
 }

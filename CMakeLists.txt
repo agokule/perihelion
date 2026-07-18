@@ -51,6 +51,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 
 add_executable(Perihelion
     ${SOURCES}
+    dependencies/adjust/adjust.cpp
     "${imgui_SOURCE_DIR}/imgui.cpp"
     "${imgui_SOURCE_DIR}/imgui_draw.cpp"
     "${imgui_SOURCE_DIR}/imgui_tables.cpp"
@@ -66,6 +67,7 @@ target_compile_definitions(Perihelion PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
 target_include_directories(Perihelion PRIVATE 
     src
+    dependencies/adjust/
     ${imgui_SOURCE_DIR}
     "${imgui_SOURCE_DIR}/misc/cpp/"
     "${rlimgui_SOURCE_DIR}"
