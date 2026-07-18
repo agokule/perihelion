@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perihelion</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+
+    <script>
+      // Prevent all scrolling
+      document.addEventListener('wheel',     e => e.preventDefault(), { passive: false });
+      document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+      document.addEventListener('keydown',   e => {
+        if (['ArrowUp','ArrowDown','Space',' '].includes(e.key)) e.preventDefault();
+      });
+
+      var Module = {
+        canvas: document.getElementById('canvas'),
+        setStatus: () => {},
+        totalDependencies: 0,
+        monitorRunDependencies(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          setStatus(left
+            ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')'
+            : '');
+        },
+        print(...args)   { console.log(...args); },
+        printErr(...args){ console.error(...args); },
+      };
+
+      document.getElementById('canvas').addEventListener('webglcontextlost', (e) => {
+        alert('WebGL context lost. Please reload the page.');
+        e.preventDefault();
+      }, false);
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>
