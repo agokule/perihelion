@@ -343,20 +343,20 @@ void _adjust_register(void *val, _ADJUST_TYPE type, const char *file_name,
     char *name = NULL;                                                         \
     do                                                                         \
     {                                                                          \
-        const char *_temp = val;                                               \
+        const char *_temp = (char*)val;                                               \
         size_t _len = strlen(_temp) + 1;                                       \
-        name = _a_memory.alloc(sizeof(char) * _len, NULL);                     \
+        name = (char*)_a_memory.alloc(sizeof(char) * _len, NULL);                     \
         memcpy(name, _temp, _len);                                             \
         _adjust_register(&name, _ADJUST_STRING, __FILE__, __LINE__);           \
     } while (0)
 
 #define ADJUST_CONST_STRING(name, val)                                         \
-    char *name = NULL;                                                         \
+    char *name = (char*)NULL;                                                         \
     do                                                                         \
     {                                                                          \
         const char *_temp = val;                                               \
         size_t _len = strlen(_temp) + 1;                                       \
-        name = _a_memory.alloc(sizeof(char) * _len, NULL);                     \
+        name = (char*)_a_memory.alloc(sizeof(char) * _len, NULL);                     \
         memcpy(name, _temp, _len);                                             \
         _adjust_register(&name, _ADJUST_STRING, __FILE__, __LINE__);           \
     } while (0)
