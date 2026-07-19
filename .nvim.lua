@@ -14,3 +14,6 @@ vim.keymap.set('n', '<leader>rp', function()
     vim.cmd.terminal('./build/bin/Perihelion')
 end)
 
+vim.keymap.set('n', '<leader>fm', function() vim.cmd.edit('./src/main.cpp') end)
+vim.keymap.set('n', '<leader>fp', function() vim.cmd.edit('./src/Preset.hpp') end)
+
