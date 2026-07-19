@@ -13,7 +13,7 @@
 #include "utils.hpp"
 
 static Preset scene = presets.at(0);
-constexpr double gravitationalConstant = 6.6743e-11;
+constexpr double gravitational_constant = 6.6743e-11;
 
 
 void load_preset(const Preset& new_preset) {
@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
 
     adjust_init();
 
-    ADJUST_CONST_INT(delta_time, 10);
-    ADJUST_CONST_INT(substeps_per_frame, 1000);
+    ADJUST_CONST_INT(delta_time, 1);
+    ADJUST_CONST_INT(substeps_per_frame, 100);
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Perihelion");
@@ -64,11 +64,10 @@ int main(int argc, char* argv[]) {
 
                     float distance = convert_light_minutes_to_meters(Vector3Distance(obj.position, obj2.position));
                     float distanceSqr = distance * distance;
-                    double gravity_acceleration = gravitationalConstant * obj2.mass / distanceSqr;
+                    double gravity_acceleration = gravitational_constant * obj2.mass / distanceSqr;
                     std::cout << gravity_acceleration << '\n';
 
-                    Vector3 direction_of_acceleration = convert_light_minutes_to_meters(obj2.position - obj.position);
-                    direction_of_acceleration /= distance;
+                    Vector3 direction_of_acceleration = Vector3Normalize(obj2.position - obj.position);
 
                     Vector3 acceleration = direction_of_acceleration * gravity_acceleration;
                     obj.accelerate(convert_meters_to_light_minutes(acceleration), delta_time);
