@@ -46,6 +46,13 @@ int main(int argc, char* argv[]) {
 
     ADJUST_CONST_STRING(text, "Perihelion");
     ADJUST_CONST_BOOL(adjust_live, false);
+    ADJUST_VAR_INT(current_selected_object, -1);
+    ADJUST_CONST_FLOAT(selected_sensitivity, 0.005f);
+    bool camera_pan_enabled = true;
+    float alpha = 0.0f;          // Horizontal rotation angle (Yaw)
+    float beta = 0.5f;           // Vertical rotation angle (Pitch)
+    float distance = 1.0f;
+    float wheel_sensitivity = 0.1f;
 
     DisableCursor();
 
@@ -53,7 +60,8 @@ int main(int argc, char* argv[]) {
 
     // Main game loop
     while (!WindowShouldClose()) {
-        UpdateCamera(&camera, CAMERA_FREE);
+        if (camera_pan_enabled)
+            UpdateCamera(&camera, current_selected_object == -1 ? CAMERA_FREE : CAMERA_ORBITAL);
 
         // simulate gravity
         for (int i = 0; i < substeps_per_frame; i++) {
@@ -81,47 +89,75 @@ int main(int argc, char* argv[]) {
         BeginDrawing();
         ClearBackground(DARKGRAY);
 
-        DrawFPS(10, 10);
-
         BeginMode3D(camera);
 
         for (const Object& obj : scene.objects)
             obj.draw();
 
-        DrawGrid(100, 0.5f);
+        DrawGrid(1500, 10);
 
         EndMode3D();
 
-        for (const Object& obj : scene.objects)
-            obj.draw_label(camera);
+        DrawFPS(10, 10);
 
         // start ImGui Conent
         rlImGuiBegin();
 
-        if (ImGui::Begin("Test Window")) {
-	    ImGui::Text("%s", text);
-        }
-        ImGui::End();
+        ImGui::Begin("Select an Object");
 
-        if (adjust_live || IsKeyPressed(KEY_R))
-            adjust_update();
+        int idx = 0;
+        for (const Object& obj : scene.objects) {
+            obj.draw_label(camera);
+            if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
+                current_selected_object = idx;
+                camera.position = (obj.position - (obj.radius * 2)).to_vector3();
+                distance = obj.radius * 2;
+            }
+
+            if (current_selected_object == idx) {
+                camera.target = obj.position.to_vector3();
+
+                Vector2 mouseDelta = GetMouseDelta();
+                alpha -= mouseDelta.x * selected_sensitivity;
+                beta  += mouseDelta.y * selected_sensitivity;
+
+                // Clamp vertical angle to prevent flipping upside down
+                if (beta >  1.4f) beta =  1.4f;
+                if (beta < -1.4f) beta = -1.4f;
+
+                // 3. Zoom with mouse scroll wheel
+                distance -= GetMouseWheelMove() * wheel_sensitivity;
+                if (distance < obj.radius) distance = obj.radius; // Prevent going inside the object
+
+                // 4. Calculate camera position using spherical trigonometry
+                camera.position.x = obj.position.x + distance * cosf(beta) * sinf(alpha);
+                camera.position.y = obj.position.y + distance * sinf(beta);
+                camera.position.z = obj.position.z + distance * cosf(beta) * cosf(alpha);
+            }
+            idx++;
+        }
+        if (ImGui::RadioButton("None", &current_selected_object, -1))
+            current_selected_object = -1;
+
+        ImGui::End();
 
         // end ImGui Content
         rlImGuiEnd();
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            DrawText("Prssed", 0, 0, 20, RED);
-            DisableCursor();
+        if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
+            if (adjust_live || IsKeyPressed(KEY_R))
+                adjust_update();
+
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                DrawText("Prssed", 0, 0, 20, RED);
+                DisableCursor();
+                camera_pan_enabled = true;
+            }
+            if (IsKeyPressed(KEY_ESCAPE)) {
+                EnableCursor();
+                camera_pan_enabled = false;
+            }
         }
-        if (IsKeyPressed(KEY_ESCAPE))
-            EnableCursor();
-
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-            DrawText("Down", 0, 20, 20, GREEN);
-
-        if (IsWindowFocused())
-            DrawText("Focused", 100, 20, 20, WHITE);
 
         EndDrawing();
     }
