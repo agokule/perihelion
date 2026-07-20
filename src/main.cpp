@@ -1,3 +1,4 @@
+#include "Vector3Double.hpp"
 #include "raylib.h"
 #include "extras/IconsFontAwesome6.h"
 #include "adjust.h"
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
     adjust_init();
 
     ADJUST_CONST_INT(delta_time, 1);
-    ADJUST_CONST_INT(substeps_per_frame, 100);
+    ADJUST_CONST_INT(substeps_per_frame, 500);
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Perihelion");
@@ -70,15 +71,14 @@ int main(int argc, char* argv[]) {
                     if (obj2.name == obj.name)
                         continue;
 
-                    float distance = convert_light_minutes_to_meters(Vector3Distance(obj.position, obj2.position));
-                    float distanceSqr = distance * distance;
+                    double distance = convert_light_seconds_to_meters(obj.position.distance(obj2.position));
+                    double distanceSqr = distance * distance;
                     double gravity_acceleration = gravitational_constant * obj2.mass / distanceSqr;
-                    std::cout << gravity_acceleration << '\n';
 
-                    Vector3 direction_of_acceleration = Vector3Normalize(obj2.position - obj.position);
+                    Vector3Double direction_of_acceleration = (obj2.position - obj.position).normalize();
 
-                    Vector3 acceleration = direction_of_acceleration * gravity_acceleration;
-                    obj.accelerate(convert_meters_to_light_minutes(acceleration), delta_time);
+                    Vector3Double acceleration = direction_of_acceleration * gravity_acceleration;
+                    obj.accelerate(convert_meters_to_light_seconds(acceleration), delta_time);
                 }
             }
             for (Object& obj : scene.objects) {

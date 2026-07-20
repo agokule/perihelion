@@ -4,6 +4,7 @@
 #include <raylib.h>
 #include <raymath.h>
 
+#include "Vector3Double.hpp"
 #include "utils.hpp"
 
 enum class ObjectType {
@@ -17,13 +18,13 @@ struct Object {
     ObjectType type;
     std::string name;
     // in kg
-    float mass;
+    double mass;
     // in light seconds
-    float radius;
-    Vector3 position;
-    Vector3 velocity;
+    double radius;
+    Vector3Double position;
+    Vector3Double velocity;
 
-    Object(ObjectType type, const std::string& name, float mass, float radius, Vector3 position, Vector3 starting_velocity):
+    Object(ObjectType type, const std::string& name, float mass, float radius, Vector3Double position, Vector3Double starting_velocity):
         type(type),
         name(name),
         mass(mass),
@@ -31,22 +32,22 @@ struct Object {
         position(position),
         velocity(starting_velocity) {}
 
-    void accelerate(Vector3 acceleration, float delta_time) {
+    void accelerate(Vector3Double acceleration, double delta_time) {
         velocity += acceleration * delta_time;
     }
 
-    void update_pos(float delta_time) {
+    void update_pos(double delta_time) {
         position += velocity * delta_time;
     }
 
     void draw() const {
-        DrawSphere(position, radius, YELLOW);
+        DrawSphere(position.to_vector3(), radius, YELLOW);
     }
 
     void draw_label(Camera3D& camera) const {
         int font_size = 15;
 
-        float distance = Vector3Distance(position, camera.position);
+        float distance = position.distance(camera.position);
 
         
         // if (distance > 30)
@@ -56,9 +57,9 @@ struct Object {
         if (distance > 10)
             font_size = 10;
 
-        auto text_pos = GetWorldToScreen(position, camera);
+        auto text_pos = GetWorldToScreen(position.to_vector3(), camera);
 
-        if (!IsObjectInCamera(position, camera))
+        if (!IsObjectInCamera(position.to_vector3(), camera))
             return;
 
         draw_text_centered(name, text_pos, font_size, GREEN);
