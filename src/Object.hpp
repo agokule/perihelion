@@ -18,7 +18,7 @@ struct Object {
     std::string name;
     // in kg
     float mass;
-    // in light minutes
+    // in light seconds
     float radius;
     Vector3 position;
     Vector3 velocity;
