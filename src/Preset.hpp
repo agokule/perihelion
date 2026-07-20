@@ -36,6 +36,11 @@ const std::vector<Preset> presets {
                    {-89.4f, 0.0f, 482.5f}, 
                    {-0.00009765f, 0.0f, -0.00001808f}),
 
+            // 3. Moon (Position offset +1.282 ls on X, Velocity offset +0.000003409 ls/s on Z)
+            Object(ObjectType::Moon, "The Moon", 7.349e22f, 0.005795f, 
+                   { -88.118f, 0.0f, 482.5f }, 
+                   { -0.00009765f, 0.0f, -0.000014671f }),
+
             // 5. MARS
             // Mass: 6.417e23 kg | Radius: ~0.011 light-seconds
             Object(ObjectType::Planet, "Mars", 6.417e23f, 0.01131f, 
