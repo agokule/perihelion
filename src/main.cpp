@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
             if (current_selected_object == idx) {
                 camera.target = obj.position.to_vector3();
 
-                Vector2 mouseDelta = GetMouseDelta();
+                Vector2 mouseDelta = camera_pan_enabled ? GetMouseDelta() : Vector2{0, 0};
                 alpha -= mouseDelta.x * selected_sensitivity;
                 beta  += mouseDelta.y * selected_sensitivity;
 
@@ -126,7 +126,8 @@ int main(int argc, char* argv[]) {
                 if (beta < -1.4f) beta = -1.4f;
 
                 // 3. Zoom with mouse scroll wheel
-                distance -= GetMouseWheelMove() * wheel_sensitivity;
+                auto mouse_wheel_move = camera_pan_enabled ? GetMouseWheelMove() : 0;
+                distance -= mouse_wheel_move * wheel_sensitivity;
                 if (distance < obj.radius) distance = obj.radius; // Prevent going inside the object
 
                 // 4. Calculate camera position using spherical trigonometry
