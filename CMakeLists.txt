@@ -4,21 +4,17 @@ cmake_minimum_required(VERSION 3.20)
 project(Perihelion LANGUAGES CXX)
 
 # Fetch Version 6.0 of Raylib
-# taken from https://github.com/raysan5/raylib/blob/master/projects/CMake/CMakeLists.txt
 set(RAYLIB_VERSION 6.0)
-find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
-if (NOT raylib_FOUND) # If there's none, fetch and build raylib
-    include(FetchContent)
-    FetchContent_Declare(
-        raylib
-        GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG dbc56a87da87d973a9c5baa4e7438a9d20121d28
-    )
-    FetchContent_GetProperties(raylib)
-    if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
-        set(FETCHCONTENT_QUIET NO)
-        FetchContent_MakeAvailable(raylib)
-    endif()
+FetchContent_Declare(
+    raylib
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG dbc56a87da87d973a9c5baa4e7438a9d20121d28
+    PATCH_COMMAND git restore . && git apply --ignore-whitespace "${CMAKE_CURRENT_SOURCE_DIR}/patches/raylib-increase-camera-pan-speed.patch"
+)
+FetchContent_GetProperties(raylib)
+if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
+    set(FETCHCONTENT_QUIET NO)
+    FetchContent_MakeAvailable(raylib)
 endif()
 
 # Fetch Version 1.92.7 of Dear ImGui
