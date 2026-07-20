@@ -5,6 +5,7 @@
 
 #include "imgui.h"
 #include "rlImGui.h"
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <raymath.h>
@@ -61,8 +62,9 @@ int main(int argc, char* argv[]) {
 
     // Main game loop
     while (!WindowShouldClose()) {
+        camera_pan_enabled = IsCursorHidden();
         if (camera_pan_enabled)
-            UpdateCamera(&camera, current_selected_object == -1 ? CAMERA_FREE : CAMERA_ORBITAL);
+            UpdateCamera(&camera, current_selected_object == -1 ? CAMERA_FREE : CAMERA_CUSTOM);
 
         // simulate gravity
         for (int i = 0; i < substeps_per_frame; i++) {
@@ -89,31 +91,8 @@ int main(int argc, char* argv[]) {
         BeginDrawing();
         ClearBackground(DARKGRAY);
 
-        BeginMode3D(camera);
-
-        for (const Object& obj : scene.objects)
-            obj.draw();
-
-        DrawGrid(1500, 10);
-
-        EndMode3D();
-
-        DrawFPS(10, 10);
-
-        // start ImGui Conent
-        rlImGuiBegin();
-
-        ImGui::Begin("Select an Object");
-
         int idx = 0;
         for (const Object& obj : scene.objects) {
-            obj.draw_label(camera);
-            if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
-                current_selected_object = idx;
-                camera.position = (obj.position - (obj.radius * 2)).to_vector3();
-                distance = obj.radius * 2;
-            }
-
             if (current_selected_object == idx) {
                 camera.target = obj.position.to_vector3();
 
@@ -134,6 +113,31 @@ int main(int argc, char* argv[]) {
                 camera.position.x = obj.position.x + distance * cosf(beta) * sinf(alpha);
                 camera.position.y = obj.position.y + distance * sinf(beta);
                 camera.position.z = obj.position.z + distance * cosf(beta) * cosf(alpha);
+            }
+            idx++;
+        }
+
+        BeginMode3D(camera);
+
+        for (const Object& obj : scene.objects)
+            obj.draw();
+
+        DrawGrid(1500, 10);
+
+        EndMode3D();
+
+        // draw 2d ui
+        DrawFPS(10, 10);
+        // start ImGui Conent
+        rlImGuiBegin();
+
+        ImGui::Begin("Select an Object");
+        idx = 0;
+        for (const Object& obj : scene.objects) {
+            obj.draw_label(camera);
+            if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
+                current_selected_object = idx;
+                distance = std::clamp(obj.radius * 5, 0.1, 1e100);
             }
             idx++;
         }
