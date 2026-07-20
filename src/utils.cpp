@@ -43,19 +43,3 @@ bool IsObjectInCamera(Vector3 objectPos, const Camera3D& camera) {
     return (visibleVertically && visibleHorizontally);
 }
 
-float convert_light_minutes_to_meters(float light_minutes) {
-    return light_minutes * light_minutes_meters_conversion_factor;
-}
-
-Vector3 convert_light_minutes_to_meters(Vector3 light_minutes) {
-    return light_minutes * light_minutes_meters_conversion_factor;
-}
-
-float convert_meters_to_light_minutes(float meters) {
-    return meters / light_minutes_meters_conversion_factor;
-}
-
-Vector3 convert_meters_to_light_minutes(Vector3 meters) {
-    return meters / light_minutes_meters_conversion_factor;
-}
-
