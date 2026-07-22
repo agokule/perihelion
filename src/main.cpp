@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <reasings.h>
 #include <raymath.h>
 #include <string>
 #include "Object.hpp"
@@ -56,6 +57,13 @@ int main(int argc, char* argv[]) {
     float distance = 1.0f;
     float wheel_sensitivity = 0.1f;
 
+
+    float camera_position_lerp = -1.0f;
+    float camera_target_lerp = camera_position_lerp;
+    size_t camera_lerp_start = 0;
+
+    size_t frame_counter = 0;
+
     DisableCursor();
 
     SetExitKey(KEY_NULL);
@@ -94,8 +102,6 @@ int main(int argc, char* argv[]) {
         int idx = 0;
         for (const Object& obj : scene.objects) {
             if (current_selected_object == idx) {
-                camera.target = obj.position.to_vector3();
-
                 Vector2 mouseDelta = camera_pan_enabled ? GetMouseDelta() : Vector2{0, 0};
                 alpha -= mouseDelta.x * selected_sensitivity;
                 beta  += mouseDelta.y * selected_sensitivity;
@@ -110,9 +116,29 @@ int main(int argc, char* argv[]) {
                 if (distance < obj.radius) distance = obj.radius; // Prevent going inside the object
 
                 // 4. Calculate camera position using spherical trigonometry
-                camera.position.x = obj.position.x + distance * cosf(beta) * sinf(alpha);
-                camera.position.y = obj.position.y + distance * sinf(beta);
-                camera.position.z = obj.position.z + distance * cosf(beta) * cosf(alpha);
+                Vector3 camera_position {};
+                camera_position.x = obj.position.x + distance * cosf(beta) * sinf(alpha);
+                camera_position.y = obj.position.y + distance * sinf(beta);
+                camera_position.z = obj.position.z + distance * cosf(beta) * cosf(alpha);
+
+                if (camera_position_lerp == -1.0f) {
+                    camera.position = camera_position;
+                    camera.target = obj.position.to_vector3();
+                } else {
+                    camera_target_lerp = camera_target_lerp != 1
+                        ? EaseSineIn(frame_counter - camera_lerp_start, 0.0f, 1.0f, ImGui::GetIO().Framerate * 2)
+                        : 1;
+                    if (frame_counter - camera_lerp_start >= ImGui::GetIO().Framerate) {
+                        camera_target_lerp = 1;
+                        camera_lerp_start = frame_counter;
+                    }
+                    if (camera_target_lerp == 1.0f)
+                        camera_position_lerp = std::clamp(camera_position_lerp + 0.01f, 0.01f, 1.0f);
+                    camera.position = Vector3Lerp(camera.position, camera_position, camera_position_lerp);
+                    camera.target = Vector3Lerp(camera.target, obj.position.to_vector3(), camera_target_lerp);
+                    if (camera_position_lerp == 1.0f)
+                        camera_target_lerp = camera_position_lerp = -1.0f;
+                }
             }
             idx++;
         }
@@ -138,6 +164,8 @@ int main(int argc, char* argv[]) {
             if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
                 current_selected_object = idx;
                 distance = std::clamp(obj.radius * 5, 0.1, 1e100);
+                camera_target_lerp = camera_position_lerp = 0.0f;
+                camera_lerp_start = frame_counter;
             }
             idx++;
         }
@@ -165,6 +193,7 @@ int main(int argc, char* argv[]) {
         }
 
         EndDrawing();
+        frame_counter++;
     }
 
     // De-Initialization
