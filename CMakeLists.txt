@@ -64,6 +64,7 @@ target_compile_definitions(Perihelion PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 target_include_directories(Perihelion PRIVATE 
     src
     dependencies/adjust/
+    dependencies/reasings/
     ${imgui_SOURCE_DIR}
     "${imgui_SOURCE_DIR}/misc/cpp/"
     "${rlimgui_SOURCE_DIR}"
