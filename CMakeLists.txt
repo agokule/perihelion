@@ -16,6 +16,8 @@ if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
     set(FETCHCONTENT_QUIET NO)
     FetchContent_MakeAvailable(raylib)
 endif()
+# enable JPG file support since most of the textures are jpg's
+target_compile_definitions(raylib PUBLIC SUPPORT_FILEFORMAT_JPG)
 
 # Fetch Version 1.92.7 of Dear ImGui
 FetchContent_Declare(
@@ -26,7 +28,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(ImGui)
 
-# Fetch Version 1.92.7 of Dear ImGui
+# Fetch the Version of rlImGui which supports Dear ImGui 1.92.7 and Raylib 6.0
 FetchContent_Declare(
     rlImGui
     GIT_REPOSITORY https://github.com/raylib-extras/rlImGui.git

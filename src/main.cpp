@@ -15,12 +15,15 @@
 #include "Preset.hpp"
 #include "utils.hpp"
 
-static Preset scene = presets.at(0);
+static Preset scene;
 constexpr double gravitational_constant = 6.6743e-11;
 
 
 void load_preset(const Preset& new_preset) {
     scene = new_preset;
+
+    for (Object& obj : scene.objects)
+        obj.load_model();
 }
 
 
@@ -67,6 +70,8 @@ int main(int argc, char* argv[]) {
     DisableCursor();
 
     SetExitKey(KEY_NULL);
+
+    load_preset(presets.at(0));
 
     // Main game loop
     while (!WindowShouldClose()) {
