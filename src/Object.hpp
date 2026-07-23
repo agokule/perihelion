@@ -75,11 +75,11 @@ struct Object {
         UnloadImage(image);
     }
 
-    void draw() const {
+    void draw(float scale) const {
         if (!texture_path)
-            DrawSphere(position.to_vector3(), radius, YELLOW);
+            DrawSphere(position.to_vector3(), radius * scale, YELLOW);
         else
-            DrawModelEx(*model, position.to_vector3(), {1, 0, 0}, 90.0f, {1,1,1}, WHITE);
+            DrawModelEx(*model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale, WHITE);
     }
 
     void draw_label(Camera3D& camera) const {

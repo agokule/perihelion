@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
     ADJUST_CONST_BOOL(adjust_live, false);
     ADJUST_VAR_INT(current_selected_object, -1);
     ADJUST_CONST_FLOAT(selected_sensitivity, 0.005f);
+    ADJUST_CONST_FLOAT(objects_scale, 5.0f);
     bool camera_pan_enabled = true;
     float alpha = 0.0f;          // Horizontal rotation angle (Yaw)
     float beta = 0.5f;           // Vertical rotation angle (Pitch)
@@ -151,7 +152,7 @@ int main(int argc, char* argv[]) {
         BeginMode3D(camera);
 
         for (const Object& obj : scene.objects)
-            obj.draw();
+            obj.draw(objects_scale);
 
         DrawGrid(1500, 10);
 
@@ -168,7 +169,7 @@ int main(int argc, char* argv[]) {
             obj.draw_label(camera);
             if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
                 current_selected_object = idx;
-                distance = std::clamp(obj.radius * 5, 0.1, 1e100);
+                distance = std::clamp(obj.radius * 5 * objects_scale, 0.1, 1e100);
                 camera_target_lerp = camera_position_lerp = 0.0f;
                 camera_lerp_start = frame_counter;
             }
