@@ -8,7 +8,7 @@ void draw_text_centered(const std::string& text, Vector2 pos, int font_size, Col
     DrawText(text.c_str(), new_pos.x, new_pos.y, font_size, color);
 }
 
-bool IsObjectInCamera(Vector3 objectPos, const Camera3D& camera) {
+bool is_object_in_camera(Vector3 objectPos, const Camera3D& camera) {
     // 1. Calculate the camera's local coordinate axes
     Vector3 cameraForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
     Vector3 cameraRight = Vector3Normalize(Vector3CrossProduct(cameraForward, camera.up));
@@ -41,5 +41,25 @@ bool IsObjectInCamera(Vector3 objectPos, const Camera3D& camera) {
     bool visibleHorizontally = (fabsf(hOffset) <= halfWidthLimit);
 
     return (visibleVertically && visibleHorizontally);
+}
+
+float get_screen_radius_of_sphere(const Camera3D& camera, Vector3 sphere_position, float radius) {
+    // 1. Calculate the camera's forward view direction
+    Vector3 viewDir = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
+
+    // 2. Calculate the camera's true Right vector
+    Vector3 cameraRight = Vector3Normalize(Vector3CrossProduct(viewDir, camera.up));
+
+    // 3. Offset the sphere center along the camera's Right vector by the radius
+    Vector3 sphereRightPoint = Vector3Add(sphere_position, Vector3Scale(cameraRight, radius));
+
+    // 4. Project both to screen space
+    Vector2 screenCenter = GetWorldToScreen(sphere_position, camera);
+    Vector2 screenRightEdge = GetWorldToScreen(sphereRightPoint, camera);
+
+    // 5. Calculate the true pixel radius
+    float screenRadius = Vector2Distance(screenCenter, screenRightEdge);
+
+    return screenRadius;
 }
 

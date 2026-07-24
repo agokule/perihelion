@@ -167,6 +167,9 @@ int main(int argc, char* argv[]) {
         idx = 0;
         for (const Object& obj : scene.objects) {
             obj.draw_label(camera);
+            if (obj.position.distance(Vector3Double{camera.position}) > 50.0f)
+                obj.draw_outline(objects_scale, camera);
+
             if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
                 current_selected_object = idx;
                 distance = std::clamp(obj.radius * 5 * objects_scale, 0.1, 1e100);

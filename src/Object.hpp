@@ -82,6 +82,15 @@ struct Object {
             DrawModelEx(*model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale, WHITE);
     }
 
+    void draw_outline(float scale, const Camera3D& camera) const {
+        if (!is_object_in_camera(position.to_vector3(), camera))
+            return;
+
+        float screen_radius = get_screen_radius_of_sphere(camera, position.to_vector3(), radius * scale);
+        screen_radius += 5;
+        DrawCircleLinesV(GetWorldToScreen(position.to_vector3(), camera), screen_radius, WHITE);
+    }
+
     void draw_label(Camera3D& camera) const {
         int font_size = 15;
 
@@ -96,8 +105,10 @@ struct Object {
             font_size = 10;
 
         auto text_pos = GetWorldToScreen(position.to_vector3(), camera);
+        if (distance > 50)
+            text_pos.y -= 10;
 
-        if (!IsObjectInCamera(position.to_vector3(), camera))
+        if (!is_object_in_camera(position.to_vector3(), camera))
             return;
 
         draw_text_centered(name, text_pos, font_size, GREEN);
