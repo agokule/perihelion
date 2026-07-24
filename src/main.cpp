@@ -74,6 +74,16 @@ int main(int argc, char* argv[]) {
 
     load_preset(presets.at(0));
 
+    auto select_object = [&current_selected_object, &distance,
+                          objects_scale, &camera_lerp_start,
+                          &camera_target_lerp, &camera_position_lerp, &frame_counter]
+            (int idx, double radius) {
+        current_selected_object = idx;
+        distance = std::clamp(radius * 5 * objects_scale, 0.1, 1e100);
+        camera_target_lerp = camera_position_lerp = 0.0f;
+        camera_lerp_start = frame_counter;
+    };
+
     // Main game loop
     while (!WindowShouldClose()) {
         camera_pan_enabled = IsCursorHidden();
@@ -169,15 +179,14 @@ int main(int argc, char* argv[]) {
         idx = 0;
         for (const Object& obj : scene.objects) {
             obj.draw_label(camera);
-            if (obj.position.distance(Vector3Double{camera.position}) > 50.0f)
-                obj.draw_outline(objects_scale, camera);
 
             if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx)) {
-                current_selected_object = idx;
-                distance = std::clamp(obj.radius * 5 * objects_scale, 0.1, 1e100);
-                camera_target_lerp = camera_position_lerp = 0.0f;
-                camera_lerp_start = frame_counter;
+                select_object(idx, obj.radius);
             }
+
+            if (obj.draw_outline(objects_scale, camera))
+                select_object(idx, obj.radius);
+
             idx++;
         }
         if (ImGui::RadioButton("None", &current_selected_object, -1))

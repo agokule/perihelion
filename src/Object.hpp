@@ -9,6 +9,7 @@
 #include <raymath.h>
 
 #include "Vector3Double.hpp"
+#include "imgui.h"
 #include "utils.hpp"
 
 enum class ObjectType {
@@ -92,13 +93,25 @@ struct Object {
             DrawModelEx(*model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale, WHITE);
     }
 
-    void draw_outline(float scale, const Camera3D& camera) const {
+    // returns true if object was selected
+    bool draw_outline(float scale, const Camera3D& camera) const {
         if (!is_object_in_camera(position.to_vector3(), camera))
-            return;
+            return false;
 
         float screen_radius = get_screen_radius_of_sphere(camera, position.to_vector3(), radius * scale);
         screen_radius += 5;
-        DrawCircleLinesV(GetWorldToScreen(position.to_vector3(), camera), screen_radius, WHITE);
+        Vector2 circle_pos = GetWorldToScreen(position.to_vector3(), camera);
+
+        if (position.distance(Vector3Double{camera.position}) > 50.0f)
+            DrawCircleLinesV(circle_pos, screen_radius, WHITE);
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            Vector2 mouse_pos = GetMousePosition();
+            return !ImGui::GetIO().WantCaptureMouse
+                && CheckCollisionPointCircle(mouse_pos, circle_pos, screen_radius);
+        }
+        return false;
+    }
 
     void draw_trail() const {
         auto sz = previous_positions.size();
