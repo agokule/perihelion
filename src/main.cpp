@@ -151,10 +151,10 @@ int main(int argc, char* argv[]) {
 
         BeginMode3D(camera);
 
+        DrawGrid(1500, 10);
+
         for (const Object& obj : scene.objects)
             obj.draw(objects_scale);
-
-        DrawGrid(1500, 10);
 
         EndMode3D();
 
