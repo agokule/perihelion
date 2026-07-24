@@ -153,8 +153,10 @@ int main(int argc, char* argv[]) {
 
         DrawGrid(1500, 10);
 
-        for (const Object& obj : scene.objects)
+        for (const Object& obj : scene.objects) {
+            obj.draw_trail();
             obj.draw(objects_scale);
+        }
 
         EndMode3D();
 

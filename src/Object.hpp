@@ -1,6 +1,8 @@
 #pragma once
 
+#include <deque>
 #include <filesystem>
+#include <iterator>
 #include <optional>
 #include <string>
 #include <raylib.h>
@@ -26,6 +28,8 @@ struct Object {
     Vector3Double position;
     Vector3Double velocity;
 
+    std::deque<Vector3> previous_positions;
+
     std::optional<std::filesystem::path> texture_path;
     std::optional<Texture> texture;
     std::optional<Model> model;
@@ -37,7 +41,8 @@ struct Object {
         radius(radius),
         position(position),
         velocity(starting_velocity),
-        texture_path(texture_path) {
+        texture_path(texture_path),
+        previous_positions() {
             if (!texture_path) {
                 texture = std::nullopt;
                 model = std::nullopt;
@@ -57,6 +62,11 @@ struct Object {
     }
 
     void update_pos(double delta_time) {
+        if (previous_positions.empty() || position.distance(previous_positions.back()) > 0.05f)
+            previous_positions.push_back(position.to_vector3());
+        if (previous_positions.size() > 150)
+            previous_positions.pop_front();
+
         position += velocity * delta_time;
     }
 
@@ -89,6 +99,15 @@ struct Object {
         float screen_radius = get_screen_radius_of_sphere(camera, position.to_vector3(), radius * scale);
         screen_radius += 5;
         DrawCircleLinesV(GetWorldToScreen(position.to_vector3(), camera), screen_radius, WHITE);
+
+    void draw_trail() const {
+        auto sz = previous_positions.size();
+
+        for (auto it = std::next(previous_positions.cbegin()); it != previous_positions.cend(); it++) {
+            auto idx = it - previous_positions.cbegin();
+            float fadedness = (float)idx / sz;
+            DrawLine3D(*std::prev(it), *it, Fade(WHITE, fadedness));
+        }
     }
 
     void draw_label(Camera3D& camera) const {
