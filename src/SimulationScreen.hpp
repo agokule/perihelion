@@ -46,7 +46,7 @@ public:
     std::optional<ObjectSelection> draw_object_selection_ui(Camera3D& camera, const SimulationSettings& settings);
 
     // makes idx the selected object and starts the camera lerp toward it
-    void select_object(int idx, double radius, const SimulationSettings& settings, std::size_t frame_counter);
+    void select_object(ObjectSelection selection, const SimulationSettings& settings, std::size_t frame_counter);
 
     int current_selected_object = -1;
 

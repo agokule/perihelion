@@ -49,10 +49,12 @@ void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
     }
 }
 
-void SimulationScreen::select_object(int idx, double radius, const SimulationSettings& settings,
+void SimulationScreen::select_object(ObjectSelection selection, const SimulationSettings& settings,
                                      std::size_t frame_counter) {
-    current_selected_object = idx;
-    distance = std::clamp(radius * 5 * settings.objects_scale, 0.1, 1e100);
+    if (current_selected_object == selection.idx)
+        return;
+    current_selected_object = selection.idx;
+    distance = std::clamp(selection.radius * 5 * settings.objects_scale, 0.1, 1e100);
     camera_target_lerp = camera_position_lerp = 0.0f;
     camera_lerp_start = frame_counter;
 }
