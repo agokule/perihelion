@@ -1,2 +1,11 @@
 build/
 .cache/
+
+# Claude Code local state & credentials
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# Large log outputs & session history (optional but recommended)
+.claude/projects/**/*.jsonl
+.claude/projects/**/*.txt
