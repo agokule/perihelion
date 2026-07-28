@@ -1,0 +1,64 @@
+#pragma once
+
+#include <cstddef>
+#include <optional>
+#include <raylib.h>
+
+#include "Preset.hpp"
+
+// tunable values that come from adjust.h and are re-read every frame
+struct SimulationSettings {
+    int delta_time;
+    int substeps_per_frame;
+    float selected_sensitivity;
+    float objects_scale;
+};
+
+// an object the user picked this frame, either via the radio button list or
+// by clicking its outline
+struct ObjectSelection {
+    int idx;
+    double radius;
+};
+
+// owns the currently loaded preset and everything needed to simulate and
+// draw it; main.cpp only calls into this when AppState::Simulation is active
+class SimulationScreen {
+public:
+    explicit SimulationScreen(const Preset& initial_preset);
+
+    void load_preset(const Preset& new_preset);
+
+    // advances the n-body simulation by one frame
+    void simulate_physics(const SimulationSettings& settings);
+
+    // follows the selected object, if any; must run before draw_world so the
+    // camera is up to date for this frame's render
+    void update_camera(Camera3D& camera, const SimulationSettings& settings,
+                        bool camera_pan_enabled, std::size_t frame_counter);
+
+    // draws the grid, trails and objects; wraps its own Begin/EndMode3D
+    void draw_world(const Camera3D& camera, const SimulationSettings& settings) const;
+
+    // draws the ImGui object picker; call between rlImGuiBegin/rlImGuiEnd.
+    // returns the object the user picked this frame, if any, so the caller
+    // can decide to call select_object
+    std::optional<ObjectSelection> draw_object_selection_ui(Camera3D& camera, const SimulationSettings& settings);
+
+    // makes idx the selected object and starts the camera lerp toward it
+    void select_object(int idx, double radius, const SimulationSettings& settings, std::size_t frame_counter);
+
+    int current_selected_object = -1;
+
+private:
+    Preset scene;
+
+    float alpha = 0.0f; // horizontal camera rotation (yaw)
+    float beta = 0.5f;  // vertical camera rotation (pitch)
+    float distance = 1.0f;
+    float wheel_sensitivity = 0.1f;
+
+    float camera_position_lerp = -1.0f;
+    float camera_target_lerp = -1.0f;
+    std::size_t camera_lerp_start = 0;
+};
