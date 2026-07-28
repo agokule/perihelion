@@ -5,7 +5,10 @@
 #include <imgui.h>
 #include <raymath.h>
 #include <reasings.h>
+#include <string>
+#include <vector>
 
+#include "ui/ObjectSelector.hpp"
 #include "utils.hpp"
 
 namespace {
@@ -118,24 +121,27 @@ std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera
                                                                            const SimulationSettings& settings) {
     std::optional<ObjectSelection> selection;
 
-    ImGui::Begin("Select an Object");
+    std::vector<std::string> object_names;
+    object_names.reserve(scene.objects.size());
 
     int idx = 0;
     for (const Object& obj : scene.objects) {
         obj.draw_label(camera);
-
-        if (ImGui::RadioButton(obj.name.c_str(), &current_selected_object, idx))
-            selection = ObjectSelection{idx, obj.radius};
+        object_names.push_back(obj.name);
 
         if (obj.draw_outline(settings.objects_scale, camera))
             selection = ObjectSelection{idx, obj.radius};
 
         idx++;
     }
-    if (ImGui::RadioButton("None", &current_selected_object, -1))
-        current_selected_object = -1;
 
-    ImGui::End();
+    int new_selected_object = ObjectSelector(object_names, current_selected_object);
+    if (new_selected_object != current_selected_object) {
+        if (new_selected_object == -1)
+            current_selected_object = -1;
+        else
+            selection = ObjectSelection{new_selected_object, scene.objects[new_selected_object].radius};
+    }
 
     return selection;
 }
