@@ -23,15 +23,22 @@ int ObjectSelector(const std::vector<std::string>& object_names, int current_sel
 
     ImGui::Begin("##ObjectSelector", nullptr, flags);
 
-    ImGui::BeginDisabled(!has_objects || selected <= 0);
-    if (ImGui::Button("Previous"))
+    // both buttons share a width sized to the wider label, so "Previous"
+    // doesn't end up wider than "Next"
+    float button_width = std::max(ImGui::CalcTextSize("Previous").x, ImGui::CalcTextSize("Next").x)
+        + ImGui::GetStyle().FramePadding.x * 2.0f;
+
+    // -1 (None) is a selectable position: Previous steps down into it,
+    // Next steps back out of it. It's the only way to get the free camera.
+    ImGui::BeginDisabled(!has_objects || selected < 0);
+    if (ImGui::Button("Previous", ImVec2(button_width, 0.0f)))
         selected--;
     ImGui::EndDisabled();
 
     ImGui::SameLine();
 
     // size the combo to the longest name rather than an arbitrary fixed width
-    float combo_width = 0.0f;
+    float combo_width = ImGui::CalcTextSize("None").x;
     for (const std::string& name : object_names)
         combo_width = std::max(combo_width, ImGui::CalcTextSize(name.c_str()).x);
     combo_width += ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
@@ -44,6 +51,12 @@ int ObjectSelector(const std::vector<std::string>& object_names, int current_sel
 
     ImGui::BeginDisabled(!has_objects);
     if (ImGui::BeginCombo("##ObjectSelectorCombo", preview)) {
+        bool none_selected = (selected == -1);
+        if (ImGui::Selectable("None", none_selected))
+            selected = -1;
+        if (none_selected)
+            ImGui::SetItemDefaultFocus();
+
         for (int i = 0; i < (int)object_names.size(); i++) {
             bool is_selected = (i == selected);
             if (ImGui::Selectable(object_names[i].c_str(), is_selected))
@@ -58,7 +71,7 @@ int ObjectSelector(const std::vector<std::string>& object_names, int current_sel
     ImGui::SameLine();
 
     ImGui::BeginDisabled(!has_objects || selected >= (int)object_names.size() - 1);
-    if (ImGui::Button("Next"))
+    if (ImGui::Button("Next", ImVec2(button_width, 0.0f)))
         selected++;
     ImGui::EndDisabled();
 
