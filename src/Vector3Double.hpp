@@ -30,5 +30,7 @@ struct Vector3Double {
 
     Vector3Double& operator+=(const Vector3Double& v) { x += v.x; y += v.y; z += v.z; return *this; }
     Vector3Double& operator/=(double s) { x /= s; y /= s; z /= s; return *this; }
+    
+    bool operator==(const Vector3Double& other) { return x == other.x && y == other.y && z == other.z; }
 };
 
