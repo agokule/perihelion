@@ -113,9 +113,7 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
     }
 }
 
-void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) {
-    BeginMode3D(camera);
-
+void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const SimulationSettings& settings) const {
     int slices = 50;
     int spacing_between_slices = 5;
     int grid_dimensions = slices * 2 + 1;
@@ -138,8 +136,6 @@ void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettin
 
     double vertical_shift = abs(center_of_mass_y - max_y_val);
     center.y = -vertical_shift;
-    std::cout << center.y << '\n';
-    std::cout << center_of_mass_y << ',' << max_y_val << '\n';
     max_y_val = -std::numeric_limits<double>::infinity();
 
     for (int horiz = -slices; horiz <= slices; horiz++) {
@@ -160,10 +156,8 @@ void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettin
             max_y_val = std::max(max_y_val, y);
             y += center.y;
             grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx] = y;
-            // std::cout << x << ',' << y << ',' << z << '\n';
 
             Vector3 point = {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
-            // DrawPoint3D(point, RED);
 
             if (horiz_vector_idx > 0) {
                 Vector3 left_point = point;
@@ -179,6 +173,12 @@ void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettin
             }
         }
     }
+}
+
+void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) const {
+    BeginMode3D(camera);
+
+    draw_spacetime_curvature(camera, settings);
 
     for (const Object& obj : scene.objects) {
         obj.draw_trail();
