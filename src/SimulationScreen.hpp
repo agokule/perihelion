@@ -1,10 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
 #include <optional>
 #include <raylib.h>
+#include <vector>
 
 #include "Preset.hpp"
+#include "Vector3Double.hpp"
 
 // tunable values that come from adjust.h and are re-read every frame
 struct SimulationSettings {
@@ -12,6 +15,7 @@ struct SimulationSettings {
     int substeps_per_frame;
     float selected_sensitivity;
     float objects_scale;
+    int space_time_curve_factor;
 };
 
 // an object the user picked this frame, either via the radio button list or
@@ -38,7 +42,7 @@ public:
                         bool camera_pan_enabled, std::size_t frame_counter);
 
     // draws the grid, trails and objects; wraps its own Begin/EndMode3D
-    void draw_world(const Camera3D& camera, const SimulationSettings& settings) const;
+    void draw_world(const Camera3D& camera, const SimulationSettings& settings);
 
     // draws the ImGui object picker; call between rlImGuiBegin/rlImGuiEnd.
     // returns the object the user picked this frame, if any, so the caller
@@ -47,6 +51,8 @@ public:
 
     // makes idx the selected object and starts the camera lerp toward it
     void select_object(ObjectSelection selection, const SimulationSettings& settings, std::size_t frame_counter);
+
+    double calculate_gravitational_field_strength(Vector3Double coordinates) const;
 
     int current_selected_object = -1;
 
@@ -61,4 +67,7 @@ private:
     float camera_position_lerp = -1.0f;
     float camera_target_lerp = -1.0f;
     std::size_t camera_lerp_start = 0;
+
+    std::vector<double> grid_y_values;
+    double max_y_val = -std::numeric_limits<double>::infinity();
 };

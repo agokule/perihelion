@@ -3,16 +3,23 @@
 #include <algorithm>
 #include <cmath>
 #include <imgui.h>
+#include <iostream>
+#include <limits>
 #include <raymath.h>
 #include <reasings.h>
 #include <string>
 #include <vector>
 
+#include "Object.hpp"
+#include "Vector3Double.hpp"
+#include "adjust.h"
+#include "raylib.h"
 #include "ui/ObjectSelector.hpp"
 #include "utils.hpp"
 
 namespace {
     constexpr double gravitational_constant = 6.6743e-11;
+    constexpr double speed_of_light = 3e8;
 }
 
 SimulationScreen::SimulationScreen(const Preset& initial_preset) {
@@ -106,10 +113,72 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
     }
 }
 
-void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) const {
+void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) {
     BeginMode3D(camera);
 
-    DrawGrid(1500, 10);
+    int slices = 50;
+    int spacing_between_slices = 5;
+    int grid_dimensions = slices * 2 + 1;
+    double radius = slices * spacing_between_slices;
+    Vector3 center { camera.position.x, 0, camera.position.z };
+
+    if (grid_y_values.empty())
+        grid_y_values.resize(std::pow(grid_dimensions, 2));
+
+    double center_of_mass_y = 0;
+    double total_mass = 0;
+    for (const Object& obj: scene.objects) {
+        if (obj.position.distance(center) > radius)
+            continue;
+        center_of_mass_y += obj.mass * obj.position.y;
+        total_mass += obj.mass;
+    }
+    if (total_mass != 0)
+        center_of_mass_y /= total_mass;
+
+    double vertical_shift = abs(center_of_mass_y - max_y_val);
+    center.y = -vertical_shift;
+    std::cout << center.y << '\n';
+    std::cout << center_of_mass_y << ',' << max_y_val << '\n';
+    max_y_val = -std::numeric_limits<double>::infinity();
+
+    for (int horiz = -slices; horiz <= slices; horiz++) {
+        int adj_horiz = horiz + center.x / spacing_between_slices;
+        const int x = adj_horiz * spacing_between_slices;
+        int horiz_vector_idx = horiz + slices;
+        for (int depth = -slices; depth <= slices; depth++) {
+            int adj_depth = depth + center.z / spacing_between_slices;
+            const int z = adj_depth * spacing_between_slices;
+            int depth_vector_idx = depth + slices;
+
+            double y = 0;
+            for (const Object& obj: scene.objects) {
+                double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
+                double distance = convert_light_seconds_to_meters(obj.position.distance({(double)x, 0, (double)z}));
+                y += convert_meters_to_light_seconds(settings.space_time_curve_factor * sqrt(r_s * (distance - r_s)));
+            }
+            max_y_val = std::max(max_y_val, y);
+            y += center.y;
+            grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx] = y;
+            // std::cout << x << ',' << y << ',' << z << '\n';
+
+            Vector3 point = {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
+            // DrawPoint3D(point, RED);
+
+            if (horiz_vector_idx > 0) {
+                Vector3 left_point = point;
+                left_point.x -= spacing_between_slices;
+                left_point.y = grid_y_values[(horiz_vector_idx - 1) * grid_dimensions + depth_vector_idx];
+                DrawLine3D(left_point, point, WHITE);
+            }
+            if (depth_vector_idx > 0) {
+                Vector3 up_point = point;
+                up_point.z -= spacing_between_slices;
+                up_point.y = grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx - 1];
+                DrawLine3D(up_point, point, WHITE);
+            }
+        }
+    }
 
     for (const Object& obj : scene.objects) {
         obj.draw_trail();
@@ -147,3 +216,4 @@ std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera
 
     return selection;
 }
+
