@@ -68,7 +68,9 @@ int main(int argc, char* argv[]) {
                 simulation.simulate_physics(settings);
                 simulation.update_camera(camera, settings, camera_pan_enabled, frame_counter);
 
+                BeginMode3D(camera);
                 simulation.draw_world(camera, settings);
+                EndMode3D();
 
                 // draw 2d ui
                 DrawFPS(10, 10);

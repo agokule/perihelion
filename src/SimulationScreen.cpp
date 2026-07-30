@@ -182,16 +182,12 @@ void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const Si
 }
 
 void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) const {
-    BeginMode3D(camera);
-
     draw_spacetime_curvature(camera, settings);
 
     for (const Object& obj : scene.objects) {
         obj.draw_trail();
         obj.draw(settings.objects_scale);
     }
-
-    EndMode3D();
 }
 
 std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera3D& camera,
