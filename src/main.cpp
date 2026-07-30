@@ -1,11 +1,18 @@
+#include "Object.hpp"
+#include "Vector3Double.hpp"
 #include "raylib.h"
 #include "extras/IconsFontAwesome6.h"
 #include "adjust.h"
 
 #include "imgui.h"
+#include "raymath.h"
 #include "rlImGui.h"
 #include "AppState.hpp"
 #include "SimulationScreen.hpp"
+#include "ui/RightClickMenu.hpp"
+#include <format>
+#include <iostream>
+#include <optional>
 
 
 int main(int argc, char* argv[]) {
@@ -47,6 +54,8 @@ int main(int argc, char* argv[]) {
 
     AppState app_state = AppState::Simulation;
     SimulationScreen simulation(presets.at(0));
+    std::optional<Vector2> right_click_location = std::nullopt;
+    std::optional<Object> adding_object = std::nullopt;
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -70,11 +79,23 @@ int main(int argc, char* argv[]) {
                 break;
 
             case AppState::Simulation:
+                if (adding_object && camera_pan_enabled)
+                    DisableCursor();
+
                 simulation.simulate_physics(settings);
                 simulation.update_camera(camera, settings, camera_pan_enabled, frame_counter);
 
                 BeginMode3D(camera);
                 simulation.draw_world(camera, settings);
+
+                if (adding_object) {
+                    Ray ray = GetScreenToWorldRay(GetMousePosition(), camera);
+                    Vector3Double pos = ray.position + ray.direction * 15;
+                    adding_object->position = pos;
+                    adding_object->draw(settings.objects_scale);
+                    adding_object->draw_trail();
+                }
+
                 EndMode3D();
 
                 // draw 2d ui
@@ -82,8 +103,55 @@ int main(int argc, char* argv[]) {
                 // start ImGui Conent
                 rlImGuiBegin();
 
+                if (adding_object) {
+                    adding_object->draw_outline(settings.objects_scale, camera);
+                    adding_object->draw_label(camera);
+                    DrawText("Press Enter to confirm", 10, 10, 24, WHITE);
+                }
+
                 if (auto selection = simulation.draw_object_selection_ui(camera, settings))
                     simulation.select_object(*selection, settings, frame_counter);
+
+                
+                if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
+                    if (!IsCursorHidden() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !adding_object) {
+                        simulation.select_object({-1, 0}, settings, frame_counter);
+                        right_click_location = GetMousePosition();
+                        ImGui::OpenPopup("Right Click Menu");
+                    }
+                }
+
+                if (right_click_location) {
+                    auto action = RightClickMenu(*right_click_location);
+                    if (action) {
+                        std::cout << (int)*action << '\n';
+                        switch (*action) {
+                            case RightClickActionSelected::CreateObject:
+                            {
+                                Ray ray = GetScreenToWorldRay(*right_click_location, camera);
+                                Vector3Double pos = ray.position + ray.direction * 15;
+                                adding_object = Object {
+                                    ObjectType::Planet,
+                                    std::format("New Object ({})", simulation.num_objects()),
+                                    1e20,
+                                    0.3,
+                                    pos,
+                                    Vector3Zero(),
+                                    WHITE
+                                };
+                                paused = true;
+                                break;
+                            }
+                            case RightClickActionSelected::EditObject:
+                                // TODO: implement this
+                                break;
+                            case RightClickActionSelected::FocusOnObject:
+                                // TODO: implement this
+                                break;
+                        }
+                        right_click_location = std::nullopt;
+                    }
+                }
 
                 // end ImGui Content
                 rlImGuiEnd();
@@ -101,6 +169,12 @@ int main(int argc, char* argv[]) {
             if (IsKeyPressed(KEY_ESCAPE)) {
                 EnableCursor();
                 camera_pan_enabled = false;
+            }
+
+            if (adding_object && IsKeyPressed(KEY_ENTER)) {
+                simulation.add_object(*adding_object);
+                paused = false;
+                adding_object = std::nullopt;
             }
         }
 

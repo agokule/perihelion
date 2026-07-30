@@ -22,12 +22,14 @@ namespace {
     constexpr double speed_of_light = 3e8;
 }
 
-SimulationScreen::SimulationScreen(const Preset& initial_preset) {
+SimulationScreen::SimulationScreen(const Preset& initial_preset): scene{initial_preset} {
     load_preset(initial_preset);
 }
 
 void SimulationScreen::load_preset(const Preset& new_preset) {
     scene = new_preset;
+    // reserve here to avoid a reallocation the first time add_object grows it
+    scene.objects.reserve(100);
 
     for (Object& obj : scene.objects)
         obj.load_model();
@@ -61,12 +63,23 @@ void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
 
 void SimulationScreen::select_object(ObjectSelection selection, const SimulationSettings& settings,
                                      std::size_t frame_counter) {
-    if (current_selected_object == selection.idx)
+    if (current_selected_object == selection.idx || settings.paused)
         return;
+
     current_selected_object = selection.idx;
     distance = std::clamp(selection.radius * 5 * settings.objects_scale, 0.1, 1e100);
     camera_target_lerp = camera_position_lerp = 0.0f;
     camera_lerp_start = frame_counter;
+}
+
+void SimulationScreen::add_object(const Object& obj) {
+    scene.objects.push_back(obj);
+
+    // pushing back may reallocate scene.objects, which copies (rather than
+    // moves) the existing Objects and drops their loaded texture/model in
+    // the process (see ObjectTextureInfo's copy constructor) — reload them
+    for (Object& o : scene.objects)
+        o.load_model();
 }
 
 void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings& settings,

@@ -53,6 +53,10 @@ public:
     // makes idx the selected object and starts the camera lerp toward it
     void select_object(ObjectSelection selection, const SimulationSettings& settings, std::size_t frame_counter);
 
+    void add_object(const Object& obj);
+
+    size_t num_objects() const { return scene.objects.size(); }
+
     int current_selected_object = -1;
 
 private:
