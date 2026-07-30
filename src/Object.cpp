@@ -93,6 +93,8 @@ bool Object::draw_outline(float scale, const Camera3D& camera) const {
 
 void Object::draw_trail() const {
     auto sz = previous_positions.size();
+    if (sz == 0)
+        return;
 
     for (auto it = std::next(previous_positions.cbegin()); it != previous_positions.cend(); it++) {
         auto idx = it - previous_positions.cbegin();
