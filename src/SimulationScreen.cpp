@@ -151,6 +151,7 @@ void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const Si
             for (const Object& obj: scene.objects) {
                 double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
                 double distance = convert_light_seconds_to_meters(obj.position.distance({(double)x, 0, (double)z}));
+                distance = std::max(distance, r_s); // Flamm's paraboloid is only defined for distance >= r_s
                 y += convert_meters_to_light_seconds(settings.space_time_curve_factor * sqrt(r_s * (distance - r_s)));
             }
             max_y_val = std::max(max_y_val, y);
