@@ -138,12 +138,17 @@ void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const Si
     center.y = -vertical_shift;
     max_y_val = -std::numeric_limits<double>::infinity();
 
+    // floor (not truncate) the camera offset so adjacent grid indices always
+    // map to x/z values exactly spacing_between_slices apart, even across 0
+    int horiz_offset = static_cast<int>(std::floor(center.x / spacing_between_slices));
+    int depth_offset = static_cast<int>(std::floor(center.z / spacing_between_slices));
+
     for (int horiz = -slices; horiz <= slices; horiz++) {
-        int adj_horiz = horiz + center.x / spacing_between_slices;
+        int adj_horiz = horiz + horiz_offset;
         const int x = adj_horiz * spacing_between_slices;
         int horiz_vector_idx = horiz + slices;
         for (int depth = -slices; depth <= slices; depth++) {
-            int adj_depth = depth + center.z / spacing_between_slices;
+            int adj_depth = depth + depth_offset;
             const int z = adj_depth * spacing_between_slices;
             int depth_vector_idx = depth + slices;
 
