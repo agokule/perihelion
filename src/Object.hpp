@@ -35,7 +35,7 @@ struct Object {
     std::optional<Texture> texture;
     std::optional<Model> model;
 
-    Object(ObjectType type, const std::string& name, float mass, float radius, Vector3Double position, Vector3Double starting_velocity, const std::optional<std::filesystem::path>& texture_path):
+    Object(ObjectType type, const std::string& name, double mass, double radius, Vector3Double position, Vector3Double starting_velocity, const std::optional<std::filesystem::path>& texture_path):
         type(type),
         name(name),
         mass(mass),
