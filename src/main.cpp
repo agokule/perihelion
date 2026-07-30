@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
     ADJUST_CONST_FLOAT(selected_sensitivity, 0.005f);
     ADJUST_CONST_FLOAT(objects_scale, 5.0f);
     ADJUST_CONST_INT(spacetime_curve_factor, 600);
+    bool paused = false;
     bool camera_pan_enabled = true;
 
     size_t frame_counter = 0;
@@ -49,7 +50,11 @@ int main(int argc, char* argv[]) {
 
     // Main game loop
     while (!WindowShouldClose()) {
-        SimulationSettings settings{delta_time, substeps_per_frame, selected_sensitivity, objects_scale, spacetime_curve_factor};
+        SimulationSettings settings {
+            delta_time, substeps_per_frame,
+            selected_sensitivity, objects_scale,
+            spacetime_curve_factor, paused
+        };
 
         camera_pan_enabled = IsCursorHidden();
         if (camera_pan_enabled)

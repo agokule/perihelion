@@ -34,6 +34,9 @@ void SimulationScreen::load_preset(const Preset& new_preset) {
 }
 
 void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
+    if (settings.paused)
+        return;
+
     for (int i = 0; i < settings.substeps_per_frame; i++) {
         for (Object& obj : scene.objects) {
             for (Object& obj2 : scene.objects) {

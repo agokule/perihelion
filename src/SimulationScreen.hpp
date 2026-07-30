@@ -9,13 +9,14 @@
 #include "Preset.hpp"
 #include "Vector3Double.hpp"
 
-// tunable values that come from adjust.h and are re-read every frame
+// tunable values that come from adjust.h and may be re-read every frame
 struct SimulationSettings {
     int delta_time;
     int substeps_per_frame;
     float selected_sensitivity;
     float objects_scale;
     int space_time_curve_factor;
+    bool paused;
 };
 
 // an object the user picked this frame, either via the radio button list or
