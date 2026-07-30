@@ -52,8 +52,6 @@ public:
     // makes idx the selected object and starts the camera lerp toward it
     void select_object(ObjectSelection selection, const SimulationSettings& settings, std::size_t frame_counter);
 
-    double calculate_gravitational_field_strength(Vector3Double coordinates) const;
-
     int current_selected_object = -1;
 
 private:
