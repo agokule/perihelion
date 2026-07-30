@@ -7,6 +7,8 @@
 #include <string>
 #include <raylib.h>
 #include <raymath.h>
+#include <string_view>
+#include <variant>
 
 #include "Vector3Double.hpp"
 #include "imgui.h"
@@ -17,6 +19,15 @@ enum class ObjectType {
     Star,
     BlackHole,
     Moon
+};
+
+struct ObjectTextureInfo {
+    std::filesystem::path texture_path;
+    std::optional<Texture> texture = std::nullopt;
+    std::optional<Model> model = std::nullopt;
+
+    ObjectTextureInfo(std::string_view path):
+        texture_path(path) {}
 };
 
 struct Object {
@@ -31,31 +42,32 @@ struct Object {
 
     std::deque<Vector3> previous_positions;
 
-    std::optional<std::filesystem::path> texture_path;
-    std::optional<Texture> texture;
-    std::optional<Model> model;
+    std::variant<ObjectTextureInfo, Color> drawing_info;
 
-    Object(ObjectType type, const std::string& name, double mass, double radius, Vector3Double position, Vector3Double starting_velocity, const std::optional<std::filesystem::path>& texture_path):
+    Object(ObjectType type, const std::string& name, double mass, double radius, Vector3Double position, Vector3Double starting_velocity, std::variant<std::string_view, Color> drawing_data):
         type(type),
         name(name),
         mass(mass),
         radius(radius),
         position(position),
         velocity(starting_velocity),
-        texture_path(texture_path),
-        previous_positions() {
-            if (!texture_path) {
-                texture = std::nullopt;
-                model = std::nullopt;
-                return;
-            }
+        previous_positions(),
+        drawing_info(WHITE) {
+            if (std::holds_alternative<std::string_view>(drawing_data))
+                drawing_info.emplace<ObjectTextureInfo>(std::get<std::string_view>(drawing_data));
+            else
+                drawing_info.emplace<Color>(std::get<Color>(drawing_data));
         }
 
     ~Object() {
-        if (texture)
-            UnloadTexture(*texture);
-        if (model)
-            UnloadModel(*model);
+        if (!std::holds_alternative<ObjectTextureInfo>(drawing_info))
+            return;
+            
+        auto& info {std::get<ObjectTextureInfo>(drawing_info)};
+        if (info.texture)
+            UnloadTexture(*info.texture);
+        if (info.model)
+            UnloadModel(*info.model);
     }
 
     void accelerate(Vector3Double acceleration, double delta_time) {
@@ -72,25 +84,27 @@ struct Object {
     }
 
     void load_model() {
-        if (!texture_path)
+        if (!std::holds_alternative<ObjectTextureInfo>(drawing_info))
             return;
-        Image image = LoadImage(texture_path->c_str());
+        auto& info {std::get<ObjectTextureInfo>(drawing_info)};
+
+        Image image = LoadImage(info.texture_path.c_str());
         ImageRotateCCW(&image);
         ImageFlipHorizontal(&image);
-        texture = LoadTextureFromImage(image);
+        info.texture = LoadTextureFromImage(image);
 
         Mesh sphere = GenMeshSphere(radius, 32, 32);
-        model = LoadModelFromMesh(sphere);
+        info.model = LoadModelFromMesh(sphere);
 
-        model->materials[0].maps[MATERIAL_MAP_ALBEDO].texture = *texture;
+        info.model->materials[0].maps[MATERIAL_MAP_ALBEDO].texture = *info.texture;
         UnloadImage(image);
     }
 
     void draw(float scale) const {
-        if (!texture_path)
-            DrawSphere(position.to_vector3(), radius * scale, YELLOW);
+        if (std::holds_alternative<Color>(drawing_info))
+            DrawSphere(position.to_vector3(), radius * scale, std::get<Color>(drawing_info));
         else
-            DrawModelEx(*model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale, WHITE);
+            DrawModelEx(*std::get<ObjectTextureInfo>(drawing_info).model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale, WHITE);
     }
 
     // returns true if object was selected
