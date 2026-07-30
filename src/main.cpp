@@ -88,7 +88,6 @@ int main(int argc, char* argv[]) {
                 adjust_update();
 
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                DrawText("Prssed", 0, 0, 20, RED);
                 DisableCursor();
                 camera_pan_enabled = true;
             }
