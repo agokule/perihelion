@@ -25,6 +25,22 @@ struct ObjectTextureInfo {
 
     ObjectTextureInfo(std::string_view path):
         texture_path(path) {}
+
+    ~ObjectTextureInfo();
+
+    // copy constructor
+    ObjectTextureInfo(const ObjectTextureInfo& other);
+    // move constructor
+    ObjectTextureInfo(ObjectTextureInfo&& other) noexcept;
+
+    // copy assignment
+    ObjectTextureInfo& operator=(const ObjectTextureInfo& other);
+    // move assignment
+    ObjectTextureInfo& operator=(ObjectTextureInfo&& other) noexcept;
+
+    // create a raylib model and link a texture to it if
+    // a texture file was given in the constructor
+    void load_model(double radius);
 };
 
 struct Object {
@@ -43,14 +59,11 @@ struct Object {
 
     Object(ObjectType type, const std::string& name, double mass, double radius, Vector3Double position, Vector3Double starting_velocity, std::variant<std::string_view, Color> drawing_data);
 
-    ~Object();
-
     void accelerate(Vector3Double acceleration, double delta_time);
 
     void update_pos(double delta_time);
 
-    // create a raylib model and link a texture to it if
-    // a texture file was given in the constructor
+    // added for convienience
     void load_model();
 
     void draw(float scale) const;

@@ -1,13 +1,85 @@
 #include "Object.hpp"
 
 #include <iterator>
+#include <optional>
 #include <variant>
 
 #include "imgui.h"
+#include "raylib.h"
 #include "utils.hpp"
 
 using std::holds_alternative;
 using std::get;
+
+ObjectTextureInfo::ObjectTextureInfo(ObjectTextureInfo&& other) noexcept:
+    texture_path(other.texture_path),
+    texture(other.texture),
+    model(other.model) {
+        other.texture = std::nullopt;
+        other.model = std::nullopt;
+    }
+
+ObjectTextureInfo::~ObjectTextureInfo() {
+    if (texture)
+        UnloadTexture(*texture);
+    if (model)
+        UnloadModel(*model);
+}
+
+ObjectTextureInfo::ObjectTextureInfo(const ObjectTextureInfo& other):
+    texture_path(other.texture_path),
+    texture(std::nullopt),
+    model(std::nullopt) {}
+
+ObjectTextureInfo& ObjectTextureInfo::operator=(const ObjectTextureInfo& other) {
+    if (this == &other)
+        return *this;
+
+    if (texture)
+        UnloadTexture(*texture);
+    if (model)
+        UnloadModel(*model);
+
+    texture_path = other.texture_path;
+    texture = std::nullopt;
+    model = std::nullopt;
+
+    return *this;
+}
+
+ObjectTextureInfo& ObjectTextureInfo::operator=(ObjectTextureInfo&& other) noexcept {
+    if (texture)
+        UnloadTexture(*texture);
+    if (model)
+        UnloadModel(*model);
+
+    texture_path = other.texture_path;
+    texture = other.texture;
+    model = other.model;
+
+    other.texture = std::nullopt;
+    other.model = std::nullopt;
+
+    return *this;
+}
+
+void ObjectTextureInfo::load_model(double radius) {
+    if (texture)
+        UnloadTexture(*texture);
+    if (model)
+        UnloadModel(*model);
+
+    Image image = LoadImage(texture_path.c_str());
+    ImageRotateCCW(&image);
+    ImageFlipHorizontal(&image);
+    texture = LoadTextureFromImage(image);
+
+    Mesh sphere = GenMeshSphere(radius, 32, 32);
+    model = LoadModelFromMesh(sphere);
+
+    model->materials[0].maps[MATERIAL_MAP_ALBEDO].texture = *texture;
+    UnloadImage(image);
+}
 
 Object::Object(ObjectType type, const std::string& name, double mass, double radius, Vector3Double position, Vector3Double starting_velocity, std::variant<std::string_view, Color> drawing_data):
     type(type),
@@ -23,17 +95,6 @@ Object::Object(ObjectType type, const std::string& name, double mass, double rad
         else
             drawing_info.emplace<Color>(get<Color>(drawing_data));
     }
-
-Object::~Object() {
-    if (!holds_alternative<ObjectTextureInfo>(drawing_info))
-        return;
-
-    auto& info {get<ObjectTextureInfo>(drawing_info)};
-    if (info.texture)
-        UnloadTexture(*info.texture);
-    if (info.model)
-        UnloadModel(*info.model);
-}
 
 void Object::accelerate(Vector3Double acceleration, double delta_time) {
     velocity += acceleration * delta_time;
@@ -52,17 +113,7 @@ void Object::load_model() {
     if (!holds_alternative<ObjectTextureInfo>(drawing_info))
         return;
     auto& info {get<ObjectTextureInfo>(drawing_info)};
-
-    Image image = LoadImage(info.texture_path.c_str());
-    ImageRotateCCW(&image);
-    ImageFlipHorizontal(&image);
-    info.texture = LoadTextureFromImage(image);
-
-    Mesh sphere = GenMeshSphere(radius, 32, 32);
-    info.model = LoadModelFromMesh(sphere);
-
-    info.model->materials[0].maps[MATERIAL_MAP_ALBEDO].texture = *info.texture;
-    UnloadImage(image);
+    info.load_model(radius);
 }
 
 void Object::draw(float scale) const {
