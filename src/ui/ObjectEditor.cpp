@@ -1,6 +1,10 @@
 #include "ObjectEditor.hpp"
 #include <imgui.h>
 #include <imgui_stdlib.h>
+#include <variant>
+
+using std::holds_alternative;
+using std::get;
 
 bool ObjectEditor(Object& obj) {
     bool done_editiing = false;
@@ -13,7 +17,7 @@ bool ObjectEditor(Object& obj) {
     double min_radius = 0.001;
 
     double max_velocity = 1;
-    double min_velocity = 0;
+    double min_velocity = -1;
 
     ImGui::InputText("Name:", &obj.name);
     ImGui::DragScalar(
@@ -47,6 +51,21 @@ bool ObjectEditor(Object& obj) {
             "%le * speed of light",
             ImGuiSliderFlags_AlwaysClamp
     );
+    if (std::holds_alternative<Color>(obj.drawing_info)) {
+        Color& color = get<Color>(obj.drawing_info);
+        float color_float[4] = {
+            color.r / 255.0f,
+            color.g / 255.0f,
+            color.b / 255.0f,
+            color.a / 255.0f
+        };
+        ImGui::ColorEdit4("Color:", color_float);
+
+        color.r = color_float[0] * 255;
+        color.g = color_float[1] * 255;
+        color.b = color_float[2] * 255;
+        color.a = color_float[3] * 255;
+    }
 
     if (ImGui::Button("Done Editing"))
         done_editiing = true;
