@@ -1,5 +1,6 @@
 #include "utils.hpp"
 #include "math.h"
+#include <optional>
 
 void draw_text_centered(const std::string& text, Vector2 pos, int font_size, Color color) {
     auto [width, height] = MeasureTextEx(GetFontDefault(), text.c_str(), font_size, 2);
@@ -63,3 +64,14 @@ float get_screen_radius_of_sphere(const Camera3D& camera, Vector3 sphere_positio
     return screenRadius;
 }
 
+std::optional<Vector3> ray_y_plane_intersection(Ray ray) {
+    if (ray.position.y > 0 && ray.direction.y > 0)
+        return std::nullopt;
+    if (ray.position.y < 0 && ray.direction.y < 0)
+        return std::nullopt;
+    if (ray.position.y != 0 && ray.direction.y == 0)
+        return std::nullopt;
+
+    float factor = -ray.position.y / ray.direction.y;
+    return ray.direction * factor + ray.position;
+}

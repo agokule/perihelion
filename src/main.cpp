@@ -10,6 +10,7 @@
 #include "AppState.hpp"
 #include "SimulationScreen.hpp"
 #include "ui/RightClickMenu.hpp"
+#include "utils.hpp"
 #include <format>
 #include <iostream>
 #include <optional>
@@ -90,8 +91,10 @@ int main(int argc, char* argv[]) {
 
                 if (adding_object) {
                     Ray ray = GetScreenToWorldRay(GetMousePosition(), camera);
-                    Vector3Double pos = ray.position + ray.direction * 15;
-                    adding_object->position = pos;
+                    auto pos = ray_y_plane_intersection(ray);
+                    if (!pos.has_value())
+                        pos = ray.position + ray.direction * 15;
+                    adding_object->position = *pos;
                     adding_object->draw(settings.objects_scale);
                     adding_object->draw_trail();
                 }
