@@ -57,6 +57,8 @@ public:
 
     size_t num_objects() const { return scene.objects.size(); }
 
+    Object& get_object(size_t idx) { return scene.objects.at(idx); }
+
     int current_selected_object = -1;
 
 private:

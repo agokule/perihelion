@@ -9,6 +9,7 @@
 #include "rlImGui.h"
 #include "AppState.hpp"
 #include "SimulationScreen.hpp"
+#include "ui/ObjectEditor.hpp"
 #include "ui/RightClickMenu.hpp"
 #include "utils.hpp"
 #include <format>
@@ -123,6 +124,9 @@ int main(int argc, char* argv[]) {
                         ImGui::OpenPopup("Right Click Menu");
                     }
                 }
+
+                if (simulation.current_selected_object != -1)
+                    ObjectEditor(simulation.get_object(simulation.current_selected_object));
 
                 if (right_click_location) {
                     auto action = RightClickMenu(*right_click_location);
