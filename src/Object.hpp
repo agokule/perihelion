@@ -40,7 +40,7 @@ struct ObjectTextureInfo {
 
     // create a raylib model and link a texture to it if
     // a texture file was given in the constructor
-    void load_model(double radius);
+    void load_model();
 };
 
 struct Object {

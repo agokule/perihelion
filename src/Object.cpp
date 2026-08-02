@@ -35,14 +35,8 @@ ObjectTextureInfo& ObjectTextureInfo::operator=(const ObjectTextureInfo& other) 
     if (this == &other)
         return *this;
 
-    if (texture)
-        UnloadTexture(*texture);
-    if (model)
-        UnloadModel(*model);
-
     texture_path = other.texture_path;
-    texture = std::nullopt;
-    model = std::nullopt;
+    load_model();
 
     return *this;
 }
@@ -63,7 +57,7 @@ ObjectTextureInfo& ObjectTextureInfo::operator=(ObjectTextureInfo&& other) noexc
     return *this;
 }
 
-void ObjectTextureInfo::load_model(double radius) {
+void ObjectTextureInfo::load_model() {
     if (texture)
         UnloadTexture(*texture);
     if (model)
@@ -74,7 +68,7 @@ void ObjectTextureInfo::load_model(double radius) {
     ImageFlipHorizontal(&image);
     texture = LoadTextureFromImage(image);
 
-    Mesh sphere = GenMeshSphere(radius, 32, 32);
+    Mesh sphere = GenMeshSphere(1, 32, 32);
     model = LoadModelFromMesh(sphere);
 
     model->materials[0].maps[MATERIAL_MAP_ALBEDO].texture = *texture;
@@ -113,14 +107,14 @@ void Object::load_model() {
     if (!holds_alternative<ObjectTextureInfo>(drawing_info))
         return;
     auto& info {get<ObjectTextureInfo>(drawing_info)};
-    info.load_model(radius);
+    info.load_model();
 }
 
 void Object::draw(float scale) const {
     if (holds_alternative<Color>(drawing_info))
         DrawSphere(position.to_vector3(), radius * scale, get<Color>(drawing_info));
     else
-        DrawModelEx(*get<ObjectTextureInfo>(drawing_info).model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale, WHITE);
+        DrawModelEx(*get<ObjectTextureInfo>(drawing_info).model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale * radius, WHITE);
 }
 
 bool Object::draw_outline(float scale, const Camera3D& camera) const {
