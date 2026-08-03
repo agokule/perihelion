@@ -79,10 +79,11 @@ std::optional<Vector3> ray_y_plane_intersection(Ray ray) {
     return ray.direction * factor + ray.position;
 }
 
-void draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height) {
+std::optional<Cone> draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height) {
     Vector3Double diff = end - start;
     double length = diff.length();
-    if (length == 0.0) return;
+    if (length == 0.0)
+        return std::nullopt;
     Vector3Double arrow_direction = diff / length;
 
     double head_height = std::max(cone_height, 0.05);
@@ -92,5 +93,11 @@ void draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height) {
 
     DrawLine3D(start.to_vector3(), shaft_end.to_vector3(), PURPLE);
     DrawCylinderEx(shaft_end.to_vector3(), end.to_vector3(), head_radius, 0, 24, RED);
+
+    return Cone {
+        .base = shaft_end,
+        .tip = end,
+        .base_radius = head_radius
+    };
 }
 

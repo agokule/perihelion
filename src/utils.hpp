@@ -24,5 +24,11 @@ float get_screen_radius_of_sphere(const Camera3D& camera, Vector3 sphere_positio
 // get the point where the ray intersects the y=0 plane
 std::optional<Vector3> ray_y_plane_intersection(Ray ray);
 
-void draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height);
+struct Cone {
+    Vector3Double base;
+    Vector3Double tip;
+    double base_radius;
+};
+
+std::optional<Cone> draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height);
 
