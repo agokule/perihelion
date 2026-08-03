@@ -22,7 +22,7 @@ T convert_meters_to_light_seconds(T meters) {
 float get_screen_radius_of_sphere(const Camera3D& camera, Vector3 sphere_position, float radius);
 
 // get the point where the ray intersects the y=0 plane
-std::optional<Vector3> ray_y_plane_intersection(Ray ray);
+std::optional<Vector3> ray_y_plane_intersection(Ray ray, float y = 0);
 
 struct Cone {
     Vector3Double base;

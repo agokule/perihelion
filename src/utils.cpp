@@ -67,15 +67,15 @@ float get_screen_radius_of_sphere(const Camera3D& camera, Vector3 sphere_positio
     return screenRadius;
 }
 
-std::optional<Vector3> ray_y_plane_intersection(Ray ray) {
-    if (ray.position.y > 0 && ray.direction.y > 0)
+std::optional<Vector3> ray_y_plane_intersection(Ray ray, float y) {
+    if (ray.position.y > y && ray.direction.y > 0)
         return std::nullopt;
-    if (ray.position.y < 0 && ray.direction.y < 0)
+    if (ray.position.y < y && ray.direction.y < 0)
         return std::nullopt;
-    if (ray.position.y != 0 && ray.direction.y == 0)
+    if (ray.position.y != y && ray.direction.y == 0)
         return std::nullopt;
 
-    float factor = -ray.position.y / ray.direction.y;
+    float factor = (y - ray.position.y) / ray.direction.y;
     return ray.direction * factor + ray.position;
 }
 
