@@ -51,7 +51,7 @@ bool ObjectEditor(Object& obj) {
             "%le * speed of light",
             ImGuiSliderFlags_AlwaysClamp
     );
-    if (std::holds_alternative<Color>(obj.drawing_info)) {
+    if (holds_alternative<Color>(obj.drawing_info)) {
         Color& color = get<Color>(obj.drawing_info);
         float color_float[4] = {
             color.r / 255.0f,
