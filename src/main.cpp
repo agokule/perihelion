@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
     std::optional<Vector2> right_click_location = std::nullopt;
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
+    bool changing_velocity_of_obj = false;
 
     auto calculate_starting_point_of_velocity_line = [](const Object& selected, const SimulationSettings& settings) {
         auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
@@ -145,7 +146,41 @@ int main(int argc, char* argv[]) {
                         right_click_location = GetMousePosition();
                         ImGui::OpenPopup("Right Click Menu");
                     }
+                    if (velocity_cone &&
+                        (is_object_in_camera(velocity_cone->base.to_vector3(), camera) ||
+                        is_object_in_camera(velocity_cone->tip.to_vector3(), camera))
+                    ) {
+                        auto mouse_pos = GetMousePosition();
+                        auto cone_tip_pos = GetWorldToScreen(velocity_cone->tip.to_vector3(), camera);
+                        auto cone_base_pos = GetWorldToScreen(velocity_cone->base.to_vector3(), camera);
+
+                        float cone_screen_height = Vector2Length(cone_tip_pos - cone_base_pos);
+
+                        bool mouse_on_cone =
+                            Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
+                            Vector2Distance(cone_base_pos, mouse_pos) < 9;
+
+                        if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && mouse_on_cone)) {
+                            changing_velocity_of_obj = true;
+                            Ray ray = GetScreenToWorldRay(mouse_pos, camera);
+                            auto pos = ray_y_plane_intersection(ray);
+                            if (!pos)
+                                pos = ray.position + ray.direction * 15;
+                            DrawSphere(*pos, 1.0f, RED);
+
+                            auto& selected = simulation.get_object(simulation.current_selected_object);
+                            Vector3Double new_scaled_velocity = Vector3Double {*pos} - calculate_starting_point_of_velocity_line(selected, settings);
+                            Vector3Double new_velocity = new_scaled_velocity / settings.velocity_arrow_scale;
+
+                            selected.velocity = new_velocity;
+                        }
+                        if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
+                            changing_velocity_of_obj = false;
+                        std::cout << "changing_velocity_of_obj: " << changing_velocity_of_obj << '\n';
+                    }
                 }
+                if ((!velocity_cone || simulation.current_selected_object == -1) && changing_velocity_of_obj)
+                    changing_velocity_of_obj = false;
 
                 if (simulation.current_selected_object != -1)
                     ObjectEditor(simulation.get_object(simulation.current_selected_object));
@@ -191,7 +226,7 @@ int main(int argc, char* argv[]) {
             if (adjust_live || IsKeyPressed(KEY_R))
                 adjust_update();
 
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !changing_velocity_of_obj) {
                 DisableCursor();
                 camera_pan_enabled = true;
             }
