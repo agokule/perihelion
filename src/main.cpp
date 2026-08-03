@@ -99,6 +99,17 @@ int main(int argc, char* argv[]) {
                     adding_object->draw(settings.objects_scale);
                     adding_object->draw_trail();
                 }
+                if (simulation.current_selected_object != -1) {
+                    const auto& selected = simulation.get_object(simulation.current_selected_object);
+
+                    auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
+                    auto start = selected.position + velocity_radius_length;
+                    auto end = start + selected.velocity * 5e3;
+
+                    auto cone_height = selected.radius * settings.objects_scale / 20;
+
+                    draw_3d_arrow(start, end, cone_height);
+                }
 
                 EndMode3D();
 
