@@ -17,6 +17,7 @@ struct SimulationSettings {
     float objects_scale;
     int space_time_curve_factor;
     bool paused;
+    float velocity_arrow_scale;
 };
 
 // an object the user picked this frame, either via the radio button list or

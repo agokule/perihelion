@@ -45,6 +45,7 @@ int main(int argc, char* argv[]) {
     ADJUST_CONST_FLOAT(selected_sensitivity, 0.005f);
     ADJUST_CONST_FLOAT(objects_scale, 5.0f);
     ADJUST_CONST_INT(spacetime_curve_factor, 600);
+    ADJUST_CONST_FLOAT(velocity_arrow_scale, 5e3f);
     bool paused = false;
     bool camera_pan_enabled = true;
 
@@ -64,7 +65,8 @@ int main(int argc, char* argv[]) {
         SimulationSettings settings {
             delta_time, substeps_per_frame,
             selected_sensitivity, objects_scale,
-            spacetime_curve_factor, paused
+            spacetime_curve_factor, paused,
+            velocity_arrow_scale
         };
 
         camera_pan_enabled = IsCursorHidden();
@@ -104,7 +106,7 @@ int main(int argc, char* argv[]) {
 
                     auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
                     auto start = selected.position + velocity_radius_length;
-                    auto end = start + selected.velocity * 5e3;
+                    auto end = start + selected.velocity * settings.velocity_arrow_scale;
 
                     auto cone_height = selected.radius * settings.objects_scale / 20;
 
