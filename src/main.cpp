@@ -59,6 +59,7 @@ int main(int argc, char* argv[]) {
     SimulationScreen simulation(presets.at(0));
     std::optional<Vector2> right_click_location = std::nullopt;
     std::optional<Object> adding_object = std::nullopt;
+    std::optional<Cone> velocity_cone = std::nullopt;
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -110,7 +111,7 @@ int main(int argc, char* argv[]) {
 
                     auto cone_height = selected.radius * settings.objects_scale / 20;
 
-                    draw_3d_arrow(start, end, cone_height);
+                    velocity_cone = draw_3d_arrow(start, end, cone_height);
                 }
 
                 EndMode3D();
@@ -126,8 +127,11 @@ int main(int argc, char* argv[]) {
                     DrawText("Press Enter to confirm", 10, 10, 24, WHITE);
                 }
 
-                if (auto selection = simulation.draw_object_selection_ui(camera, settings))
+                if (auto selection = simulation.draw_object_selection_ui(camera, settings)) {
                     simulation.select_object(*selection, settings, frame_counter);
+                    if (!selection.has_value())
+                        velocity_cone = std::nullopt;
+                }
 
                 
                 if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
