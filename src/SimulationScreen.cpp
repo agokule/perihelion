@@ -208,7 +208,7 @@ void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettin
 
 std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera3D& camera,
                                                                            const SimulationSettings& settings) {
-    std::optional<ObjectSelection> selection;
+    std::optional<ObjectSelection> selection = std::nullopt;
 
     std::vector<std::string> object_names;
     object_names.reserve(scene.objects.size());
