@@ -61,6 +61,12 @@ int main(int argc, char* argv[]) {
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
 
+    auto calculate_starting_point_of_velocity_line = [](const Object& selected, const SimulationSettings& settings) {
+        auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
+        auto start = selected.position + velocity_radius_length;
+        return start;
+    };
+
     // Main game loop
     while (!WindowShouldClose()) {
         SimulationSettings settings {
@@ -105,8 +111,7 @@ int main(int argc, char* argv[]) {
                 if (simulation.current_selected_object != -1) {
                     const auto& selected = simulation.get_object(simulation.current_selected_object);
 
-                    auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
-                    auto start = selected.position + velocity_radius_length;
+                    auto start = calculate_starting_point_of_velocity_line(selected, settings);
                     auto end = start + selected.velocity * settings.velocity_arrow_scale;
 
                     auto cone_height = selected.radius * settings.objects_scale / 20;
