@@ -235,6 +235,9 @@ int main(int argc, char* argv[]) {
                 camera_pan_enabled = false;
             }
 
+            if (IsKeyPressed(KEY_K))
+                paused = !paused;
+
             if (adding_object && IsKeyPressed(KEY_ENTER)) {
                 simulation.add_object(*adding_object);
                 paused = false;
