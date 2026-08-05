@@ -164,28 +164,20 @@ int main(int argc, char* argv[]) {
 
                             auto& selected = simulation.get_object(simulation.current_selected_object);
 
-                            // Cast against a camera re-centered on the selected object
-                            // instead of the real `camera`, whose position/target lose
-                            // float32 precision proportional to distance from the world
-                            // origin (see camera_offset_from_selected's comment).
+                            // using camera_offset_from_selected instead of the real camera
+                            // because the real camera loses decimal points of precision when
+                            // far away from the origin (see camera_offset_from_selected's comment).
                             Camera3D local_camera = camera;
                             local_camera.position = simulation.camera_offset_from_selected().to_vector3();
                             local_camera.target = Vector3Zero();
 
                             Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
-                            // Intersect at the object's own height, not `start`'s --
-                            // `start` depends on the current velocity's direction, and
-                            // using it here would feed that back into the result and
-                            // oscillate once the velocity shrinks toward zero.
                             auto pos = ray_y_plane_intersection(ray, 0.0f);
 
                             if (pos) {
                                 // The rendered tip is surface_radius further out than
                                 // `velocity` alone would put it, so invert that full
-                                // equation instead of just dividing by arrow_scale --
-                                // otherwise the tip sits permanently offset from the
-                                // cursor by surface_radius (glaring on big objects like
-                                // Jupiter/the Sun).
+                                // equation
                                 Vector3Double pos_local {*pos};
                                 double dist_from_center = pos_local.length();
                                 double surface_radius = selected.radius * settings.objects_scale;
