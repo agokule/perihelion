@@ -16,6 +16,90 @@
 #include <iostream>
 #include <optional>
 
+void handle_right_click_menu_action(
+    std::optional<RightClickActionSelected> action,
+    const Camera& camera,
+    const SimulationScreen& simulation,
+    std::optional<Object>& adding_object,
+    bool& paused
+) {
+    switch (*action) {
+        case RightClickActionSelected::CreateObject:
+        {
+            Ray ray = GetScreenToWorldRay({0, 0}, camera);
+            Vector3Double pos = ray.position + ray.direction * 15;
+            adding_object = Object {
+                ObjectType::Planet,
+                std::format("New Object ({})", simulation.num_objects()),
+                1e20,
+                0.3,
+                pos,
+                Vector3Zero(),
+                WHITE
+            };
+            paused = true;
+            break;
+        }
+        case RightClickActionSelected::EditObject:
+            // TODO: implement this
+            break;
+        case RightClickActionSelected::FocusOnObject:
+            // TODO: implement this
+            break;
+    }
+}
+
+void change_velocity_using_cone(
+        const std::optional<Cone>& velocity_cone,
+        const Camera3D& camera,
+        bool& changing_velocity_of_obj,
+        SimulationScreen& simulation,
+        const SimulationSettings& settings
+) {
+    auto mouse_pos = GetMousePosition();
+    auto cone_tip_pos = GetWorldToScreen(velocity_cone->tip.to_vector3(), camera);
+    auto cone_base_pos = GetWorldToScreen(velocity_cone->base.to_vector3(), camera);
+
+    float cone_screen_height = Vector2Length(cone_tip_pos - cone_base_pos);
+
+    bool is_mouse_on_cone =
+        Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
+        Vector2Distance(cone_base_pos, mouse_pos) < 9;
+
+    if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && is_mouse_on_cone)) {
+        changing_velocity_of_obj = true;
+
+        auto& selected = simulation.get_object(simulation.current_selected_object);
+
+        // using camera_offset_from_selected instead of the real camera
+        // because the real camera loses decimal points of precision when
+        // far away from the origin (see camera_offset_from_selected's comment).
+        Camera3D local_camera = camera;
+        local_camera.position = simulation.camera_offset_from_selected().to_vector3();
+        local_camera.target = Vector3Zero();
+
+        Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
+        auto pos = ray_y_plane_intersection(ray, 0.0f);
+
+        if (pos) {
+            // The rendered tip is surface_radius further out than
+            // `velocity` alone would put it, so invert that full
+            // equation
+            Vector3Double pos_local {*pos};
+            double dist_from_center = pos_local.length();
+            double surface_radius = selected.radius * settings.objects_scale;
+
+            if (dist_from_center > surface_radius) {
+                double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
+                selected.velocity = pos_local.normalize() * magnitude;
+            }
+        } else
+            changing_velocity_of_obj = false;
+    }
+    if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
+        changing_velocity_of_obj = false;
+    std::cout << "changing_velocity_of_obj: " << changing_velocity_of_obj << '\n';
+}
 
 int main(int argc, char* argv[]) {
     // Initialization
@@ -110,6 +194,7 @@ int main(int argc, char* argv[]) {
                     adding_object->draw_trail();
                 }
                 if (simulation.current_selected_object != -1) {
+                    // drawing the velocity vector of the current object
                     const auto& selected = simulation.get_object(simulation.current_selected_object);
 
                     auto start = calculate_starting_point_of_velocity_line(selected, settings);
@@ -149,49 +234,7 @@ int main(int argc, char* argv[]) {
                         (is_object_in_camera(velocity_cone->base.to_vector3(), camera) ||
                         is_object_in_camera(velocity_cone->tip.to_vector3(), camera))
                     ) {
-                        auto mouse_pos = GetMousePosition();
-                        auto cone_tip_pos = GetWorldToScreen(velocity_cone->tip.to_vector3(), camera);
-                        auto cone_base_pos = GetWorldToScreen(velocity_cone->base.to_vector3(), camera);
-
-                        float cone_screen_height = Vector2Length(cone_tip_pos - cone_base_pos);
-
-                        bool mouse_on_cone =
-                            Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
-                            Vector2Distance(cone_base_pos, mouse_pos) < 9;
-
-                        if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && mouse_on_cone)) {
-                            changing_velocity_of_obj = true;
-
-                            auto& selected = simulation.get_object(simulation.current_selected_object);
-
-                            // using camera_offset_from_selected instead of the real camera
-                            // because the real camera loses decimal points of precision when
-                            // far away from the origin (see camera_offset_from_selected's comment).
-                            Camera3D local_camera = camera;
-                            local_camera.position = simulation.camera_offset_from_selected().to_vector3();
-                            local_camera.target = Vector3Zero();
-
-                            Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
-                            auto pos = ray_y_plane_intersection(ray, 0.0f);
-
-                            if (pos) {
-                                // The rendered tip is surface_radius further out than
-                                // `velocity` alone would put it, so invert that full
-                                // equation
-                                Vector3Double pos_local {*pos};
-                                double dist_from_center = pos_local.length();
-                                double surface_radius = selected.radius * settings.objects_scale;
-
-                                if (dist_from_center > surface_radius) {
-                                    double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
-                                    selected.velocity = pos_local.normalize() * magnitude;
-                                }
-                            } else
-                                changing_velocity_of_obj = false;
-                        }
-                        if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
-                            changing_velocity_of_obj = false;
-                        std::cout << "changing_velocity_of_obj: " << changing_velocity_of_obj << '\n';
+                        change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings);
                     }
                 }
                 if ((!velocity_cone || simulation.current_selected_object == -1) && changing_velocity_of_obj)
@@ -204,30 +247,7 @@ int main(int argc, char* argv[]) {
                     auto action = RightClickMenu(*right_click_location);
                     if (action) {
                         std::cout << (int)*action << '\n';
-                        switch (*action) {
-                            case RightClickActionSelected::CreateObject:
-                            {
-                                Ray ray = GetScreenToWorldRay(*right_click_location, camera);
-                                Vector3Double pos = ray.position + ray.direction * 15;
-                                adding_object = Object {
-                                    ObjectType::Planet,
-                                    std::format("New Object ({})", simulation.num_objects()),
-                                    1e20,
-                                    0.3,
-                                    pos,
-                                    Vector3Zero(),
-                                    WHITE
-                                };
-                                paused = true;
-                                break;
-                            }
-                            case RightClickActionSelected::EditObject:
-                                // TODO: implement this
-                                break;
-                            case RightClickActionSelected::FocusOnObject:
-                                // TODO: implement this
-                                break;
-                        }
+                        handle_right_click_menu_action(action, camera, simulation, adding_object, paused);
                         right_click_location = std::nullopt;
                     }
                 }
