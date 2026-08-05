@@ -133,11 +133,10 @@ int main(int argc, char* argv[]) {
                     DrawText("Press Enter to confirm", 10, 10, 24, WHITE);
                 }
 
-                if (auto selection = simulation.draw_object_selection_ui(camera, settings)) {
+                if (auto selection = simulation.draw_object_selection_ui(camera, settings))
                     simulation.select_object(*selection, settings, frame_counter);
-                    if (!selection.has_value())
-                        velocity_cone = std::nullopt;
-                }
+                else
+                    velocity_cone = std::nullopt;
 
                 
                 if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
