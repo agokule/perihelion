@@ -54,6 +54,17 @@ public:
     // makes idx the selected object and starts the camera lerp toward it
     void select_object(ObjectSelection selection, const SimulationSettings& settings, std::size_t frame_counter);
 
+    // the camera's offset from the object it's currently following, kept in
+    // double precision. camera.position/camera.target (raylib's float32
+    // Vector3) are computed as the object's position plus this same offset,
+    // and once the followed object is far from the world origin that sum
+    // only has a couple thousandths of a unit of precision left -- fine for
+    // rendering, but not for pixel-accurate mouse-ray math done relative to
+    // the object (e.g. dragging the velocity arrow). Callers needing that
+    // extra double precision should build their own object-relative ray from
+    // this offset instead of reading camera.position.
+    Vector3Double camera_offset_from_selected() const;
+
     void add_object(const Object& obj);
 
     size_t num_objects() const { return scene.objects.size(); }

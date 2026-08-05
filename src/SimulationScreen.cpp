@@ -72,6 +72,14 @@ void SimulationScreen::select_object(ObjectSelection selection, const Simulation
     camera_lerp_start = frame_counter;
 }
 
+Vector3Double SimulationScreen::camera_offset_from_selected() const {
+    return Vector3Double {
+        distance * std::cos(beta) * std::sin(alpha),
+        distance * std::sin(beta),
+        distance * std::cos(beta) * std::cos(alpha)
+    };
+}
+
 void SimulationScreen::add_object(const Object& obj) {
     scene.objects.push_back(obj);
 

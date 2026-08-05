@@ -162,14 +162,27 @@ int main(int argc, char* argv[]) {
 
                         if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && mouse_on_cone)) {
                             changing_velocity_of_obj = true;
-                            Ray ray = GetScreenToWorldRay(mouse_pos, camera);
-                            auto pos = ray_y_plane_intersection(ray);
 
                             auto& selected = simulation.get_object(simulation.current_selected_object);
                             auto start = calculate_starting_point_of_velocity_line(selected, settings);
 
+                            // Cast against a camera re-centered on the selected object
+                            // (position near zero, target at the origin) instead of the
+                            // real `camera`, whose position/target are float32 and lose
+                            // precision proportional to the object's distance from the
+                            // world origin -- see camera_offset_from_selected's comment.
+                            // Every value here is object-local (small), so float32 stays
+                            // precise no matter how far the object actually is.
+                            Vector3Double start_local = start - selected.position;
+                            Camera3D local_camera = camera;
+                            local_camera.position = simulation.camera_offset_from_selected().to_vector3();
+                            local_camera.target = Vector3Zero();
+
+                            Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
+                            auto pos = ray_y_plane_intersection(ray, (float)start_local.y);
+
                             if (pos) {
-                                Vector3Double new_scaled_velocity = Vector3Double {*pos} - start;
+                                Vector3Double new_scaled_velocity = Vector3Double {*pos} - start_local;
                                 Vector3Double new_velocity = new_scaled_velocity / settings.velocity_arrow_scale;
 
                                 selected.velocity = new_velocity;
