@@ -259,6 +259,9 @@ int main(int argc, char* argv[]) {
                 camera_pan_enabled = false;
             }
 
+            if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
+                changing_velocity_of_obj = false;
+
             if (IsKeyPressed(KEY_K))
                 paused = !paused;
 
