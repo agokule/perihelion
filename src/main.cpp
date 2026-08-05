@@ -220,9 +220,6 @@ int main(int argc, char* argv[]) {
 
                 if (auto selection = simulation.draw_object_selection_ui(camera, settings))
                     simulation.select_object(*selection, settings, frame_counter);
-                else
-                    velocity_cone = std::nullopt;
-
                 
                 if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
                     if (!IsCursorHidden() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !adding_object) {
