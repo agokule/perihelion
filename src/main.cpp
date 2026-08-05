@@ -164,15 +164,17 @@ int main(int argc, char* argv[]) {
                             changing_velocity_of_obj = true;
                             Ray ray = GetScreenToWorldRay(mouse_pos, camera);
                             auto pos = ray_y_plane_intersection(ray);
-                            if (!pos)
-                                pos = ray.position + ray.direction * 15;
-                            DrawSphere(*pos, 1.0f, RED);
 
                             auto& selected = simulation.get_object(simulation.current_selected_object);
-                            Vector3Double new_scaled_velocity = Vector3Double {*pos} - calculate_starting_point_of_velocity_line(selected, settings);
-                            Vector3Double new_velocity = new_scaled_velocity / settings.velocity_arrow_scale;
+                            auto start = calculate_starting_point_of_velocity_line(selected, settings);
 
-                            selected.velocity = new_velocity;
+                            if (pos) {
+                                Vector3Double new_scaled_velocity = Vector3Double {*pos} - start;
+                                Vector3Double new_velocity = new_scaled_velocity / settings.velocity_arrow_scale;
+
+                                selected.velocity = new_velocity;
+                            } else
+                                changing_velocity_of_obj = false;
                         }
                         if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
                             changing_velocity_of_obj = false;
