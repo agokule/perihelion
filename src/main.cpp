@@ -9,6 +9,7 @@
 #include "rlImGui.h"
 #include "AppState.hpp"
 #include "SimulationScreen.hpp"
+#include "Skybox.hpp"
 #include "ui/ObjectEditor.hpp"
 #include "ui/RightClickMenu.hpp"
 #include "utils.hpp"
@@ -141,6 +142,7 @@ int main(int argc, char* argv[]) {
 
     AppState app_state = AppState::Simulation;
     SimulationScreen simulation(presets.at(0));
+    Skybox skybox("./assets/images/myersalex216-space-2638158.jpg");
     std::optional<Vector2> right_click_location = std::nullopt;
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
@@ -182,6 +184,7 @@ int main(int argc, char* argv[]) {
                 simulation.update_camera(camera, settings, camera_pan_enabled, frame_counter);
 
                 BeginMode3D(camera);
+                skybox.draw();
                 simulation.draw_world(camera, settings);
 
                 if (adding_object) {
