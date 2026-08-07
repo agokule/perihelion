@@ -1,12 +1,14 @@
 #include "Object.hpp"
 #include "Vector3Double.hpp"
 #include "raylib.h"
-#include "extras/IconsFontAwesome6.h"
 #include "adjust.h"
-
 #include "imgui.h"
 #include "raymath.h"
+
+// disable rlImGui's font awesom
+#define NO_FONT_AWESOME
 #include "rlImGui.h"
+
 #include "AppState.hpp"
 #include "SimulationScreen.hpp"
 #include "Skybox.hpp"
@@ -153,6 +155,19 @@ int main(int argc, char* argv[]) {
         auto start = selected.position + velocity_radius_length;
         return start;
     };
+
+    static const ImWchar icon_ranges[] = {
+        0xF0000, 0xF0FFF, 
+        0
+    };
+
+    ImFontConfig icons_config;
+    icons_config.MergeMode = true;
+    icons_config.PixelSnapH = true; // Prevents blurry icons
+    icons_config.GlyphRanges = icon_ranges;
+
+    auto& io = ImGui::GetIO();
+    io.Fonts->AddFontFromFileTTF("./assets/fonts/nerdfont/SymbolsNerdFont-Regular.ttf", 0.0f, &icons_config, icon_ranges);
 
     // Main game loop
     while (!WindowShouldClose()) {
