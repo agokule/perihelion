@@ -4,12 +4,28 @@
 #include <optional>
 #include <variant>
 
+#include "FontIcons.hpp"
 #include "imgui.h"
 #include "raylib.h"
 #include "utils.hpp"
 
 using std::holds_alternative;
 using std::get;
+
+const char* object_type_to_icon(ObjectType type) {
+    switch (type) {
+        case ObjectType::Star:
+            return NF_WEATHER_DAY_SUNNY;
+        case ObjectType::Planet:
+            return NF_MD_EARTH;
+        case ObjectType::Moon:
+            return NF_FA_MOON;
+        case ObjectType::BlackHole:
+            return NF_MD_MOON_NEW;
+        default:
+            return NF_COD_QUESTION;
+    }
+}
 
 ObjectTextureInfo::ObjectTextureInfo(ObjectTextureInfo&& other) noexcept:
     texture_path(other.texture_path),

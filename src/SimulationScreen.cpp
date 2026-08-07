@@ -218,13 +218,9 @@ std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera
                                                                            const SimulationSettings& settings) {
     std::optional<ObjectSelection> selection = std::nullopt;
 
-    std::vector<std::string> object_names;
-    object_names.reserve(scene.objects.size());
-
     int idx = 0;
     for (const Object& obj : scene.objects) {
         obj.draw_label(camera);
-        object_names.push_back(obj.name);
 
         if (obj.draw_outline(settings.objects_scale, camera))
             selection = ObjectSelection{idx, obj.radius};
@@ -232,7 +228,7 @@ std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera
         idx++;
     }
 
-    int new_selected_object = ObjectSelector(object_names, current_selected_object);
+    int new_selected_object = ObjectSelector(scene.objects, current_selected_object);
     if (new_selected_object != current_selected_object) {
         if (new_selected_object == -1)
             current_selected_object = -1;

@@ -1,10 +1,17 @@
 #include "ui/ObjectSelector.hpp"
 
+#include "FontIcons.hpp"
+#include "Object.hpp"
 #include "imgui.h"
 #include <algorithm>
+#include <format>
 
-int ObjectSelector(const std::vector<std::string>& object_names, int current_selected) {
-    const bool has_objects = !object_names.empty();
+std::string get_preview_text(const Object& obj) {
+    return std::format("{} {}", object_type_to_icon(obj.type), obj.name);
+}
+
+int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
+    const bool has_objects = !objects.empty();
     int selected = has_objects ? current_selected : -1;
 
     ImGuiIO& io = ImGui::GetIO();
@@ -23,15 +30,10 @@ int ObjectSelector(const std::vector<std::string>& object_names, int current_sel
 
     ImGui::Begin("##ObjectSelector", nullptr, flags);
 
-    // both buttons share a width sized to the wider label, so "Previous"
-    // doesn't end up wider than "Next"
-    float button_width = std::max(ImGui::CalcTextSize("Previous").x, ImGui::CalcTextSize("Next").x)
-        + ImGui::GetStyle().FramePadding.x * 2.0f;
-
     // -1 (None) is a selectable position: Previous steps down into it,
     // Next steps back out of it. It's the only way to get the free camera.
     ImGui::BeginDisabled(!has_objects || selected < 0);
-    if (ImGui::Button("Previous", ImVec2(button_width, 0.0f)))
+    if (ImGui::Button(NF_FA_ARROW_LEFT_LONG))
         selected--;
     ImGui::EndDisabled();
 
@@ -39,27 +41,27 @@ int ObjectSelector(const std::vector<std::string>& object_names, int current_sel
 
     // size the combo to the longest name rather than an arbitrary fixed width
     float combo_width = ImGui::CalcTextSize("None").x;
-    for (const std::string& name : object_names)
-        combo_width = std::max(combo_width, ImGui::CalcTextSize(name.c_str()).x);
+    for (const auto& obj : objects)
+        combo_width = std::max(combo_width, ImGui::CalcTextSize(get_preview_text(obj).c_str()).x);
     combo_width += ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
 
     ImGui::SetNextItemWidth(combo_width);
 
-    const char* preview = (selected >= 0 && selected < (int)object_names.size())
-        ? object_names[selected].c_str()
+    std::string preview = (selected >= 0 && selected < (int)objects.size())
+        ? get_preview_text(objects[selected]).c_str()
         : "None";
 
     ImGui::BeginDisabled(!has_objects);
-    if (ImGui::BeginCombo("##ObjectSelectorCombo", preview)) {
+    if (ImGui::BeginCombo("##ObjectSelectorCombo", preview.c_str())) {
         bool none_selected = (selected == -1);
         if (ImGui::Selectable("None", none_selected))
             selected = -1;
         if (none_selected)
             ImGui::SetItemDefaultFocus();
 
-        for (int i = 0; i < (int)object_names.size(); i++) {
+        for (int i = 0; i < (int)objects.size(); i++) {
             bool is_selected = (i == selected);
-            if (ImGui::Selectable(object_names[i].c_str(), is_selected))
+            if (ImGui::Selectable(get_preview_text(objects[i]).c_str(), is_selected))
                 selected = i;
             if (is_selected)
                 ImGui::SetItemDefaultFocus();
@@ -70,8 +72,8 @@ int ObjectSelector(const std::vector<std::string>& object_names, int current_sel
 
     ImGui::SameLine();
 
-    ImGui::BeginDisabled(!has_objects || selected >= (int)object_names.size() - 1);
-    if (ImGui::Button("Next", ImVec2(button_width, 0.0f)))
+    ImGui::BeginDisabled(!has_objects || selected >= (int)objects.size() - 1);
+    if (ImGui::Button(NF_FA_ARROW_RIGHT_LONG))
         selected++;
     ImGui::EndDisabled();
 

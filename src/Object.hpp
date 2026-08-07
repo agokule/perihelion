@@ -18,6 +18,8 @@ enum class ObjectType {
     Moon
 };
 
+const char* object_type_to_icon(ObjectType type);
+
 struct ObjectTextureInfo {
     std::filesystem::path texture_path;
     std::optional<Texture> texture = std::nullopt;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "Object.hpp"
 #include <vector>
 
 // Draws a fixed overlay, anchored to the bottom-middle of the screen,
@@ -11,4 +11,4 @@
 // Call once per frame, passing the currently selected index (-1 for none
 // selected). Returns the (possibly updated) selected index, or -1 if none
 // is selected.
-int ObjectSelector(const std::vector<std::string>& object_names, int current_selected);
+int ObjectSelector(const std::vector<Object>& objects, int current_selected);
