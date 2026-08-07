@@ -1,4 +1,5 @@
 #include "ObjectEditor.hpp"
+#include "FontIcons.hpp"
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <variant>
@@ -21,7 +22,7 @@ bool ObjectEditor(Object& obj) {
 
     ImGui::InputText("Name:", &obj.name);
     ImGui::DragScalar(
-            "Mass:",
+            NF_MD_WEIGHT_KILOGRAM " Mass:",
             ImGuiDataType_Double,
             &obj.mass,
             1e19,
@@ -31,7 +32,7 @@ bool ObjectEditor(Object& obj) {
             ImGuiSliderFlags_AlwaysClamp
     );
     ImGui::DragScalar(
-            "Radius:",
+            NF_MD_RADIUS_OUTLINE " Radius:",
             ImGuiDataType_Double,
             &obj.radius,
             0.001,
@@ -41,14 +42,14 @@ bool ObjectEditor(Object& obj) {
             ImGuiSliderFlags_AlwaysClamp
     );
     ImGui::DragScalarN(
-            "Velocity:",
+            NF_FA_PERSON_RUNNING " Velocity:",
             ImGuiDataType_Double,
             &obj.velocity.x,
             3,
             0.001,
             &min_velocity,
             &max_velocity,
-            "%le * speed of light",
+            "%le c",
             ImGuiSliderFlags_AlwaysClamp
     );
     if (holds_alternative<Color>(obj.drawing_info)) {
