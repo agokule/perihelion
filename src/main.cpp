@@ -161,10 +161,13 @@ int main(int argc, char* argv[]) {
         0
     };
 
-    ImFontConfig icons_config;
+    ImFontConfig icons_config {};
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true; // Prevents blurry icons
     icons_config.GlyphRanges = icon_ranges;
+    icons_config.ExtraSizeScale = 1.2f;
+    icons_config.GlyphOffset = {1.0f, 1.0f};
+    icons_config.SizePixels = 13.0f;
 
     auto& io = ImGui::GetIO();
     io.Fonts->AddFontFromFileTTF("./assets/fonts/nerdfont/SymbolsNerdFont-Regular.ttf", 0.0f, &icons_config, icon_ranges);
