@@ -63,6 +63,7 @@ if(MINGW)
 endif()
 
 target_compile_definitions(Perihelion PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+target_compile_definitions(Perihelion PRIVATE IMGUI_USER_CONFIG="ImConfig.hpp")
 
 target_include_directories(Perihelion PRIVATE 
     src
