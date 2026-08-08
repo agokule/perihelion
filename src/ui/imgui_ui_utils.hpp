@@ -91,7 +91,11 @@ struct NextWindowPosition {
 };
 
 // see NextWindowPosition's comment for more details
-void ImGuiSetNextWindowPos(NextWindowPosition pos, ImGuiCond cond = 0);
+void ImGuiSetNextWindowPos(NextWindowPosition& pos, ImGuiCond cond = 0);
+
+inline void ImGuiSetNextWindowPos(NextWindowPosition&& pos, ImGuiCond cond = 0) {
+    return ImGuiSetNextWindowPos(pos, cond);
+}
 
 inline NextWindowPosition& cent_horiz(NextWindowPosition&& pos) {
     return pos.center_horizontally();

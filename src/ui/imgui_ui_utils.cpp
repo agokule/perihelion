@@ -51,7 +51,7 @@ AxisResult resolve_axis(const Position& near, const Position& far, float display
 
 }
 
-void ImGuiSetNextWindowPos(NextWindowPosition pos, ImGuiCond cond) {
+void ImGuiSetNextWindowPos(NextWindowPosition& pos, ImGuiCond cond) {
     const auto& io = ImGui::GetIO();
 
     normalize_position(pos.top, io.DisplaySize.y);
