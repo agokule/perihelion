@@ -17,10 +17,7 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
 
     ImGuiIO& io = ImGui::GetIO();
 
-    constexpr float bottom_margin = 20.0f;
-
-    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y - bottom_margin),
-                             ImGuiCond_Always, ImVec2(0.5f, 1.0f));
+    ImGuiSetNextWindowPos(NextWindowPosition{ .bottom = 20, .pivot_y = 1.0f }.center_horizontally());
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration
         | ImGuiWindowFlags_AlwaysAutoResize
