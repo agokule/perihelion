@@ -130,8 +130,7 @@ int main(int argc, char* argv[]) {
     ADJUST_CONST_STRING(text, "Perihelion");
     ADJUST_CONST_BOOL(adjust_live, false);
     ADJUST_CONST_FLOAT(selected_sensitivity, 0.005f);
-    ADJUST_CONST_FLOAT(objects_scale, 5.0f);
-    ADJUST_CONST_INT(spacetime_curve_factor, 600);
+    ADJUST_CONST_FLOAT(objects_scale, 10.0f);
     ADJUST_CONST_FLOAT(velocity_arrow_scale, 5e3f);
     bool paused = false;
     bool camera_pan_enabled = true;
@@ -149,6 +148,14 @@ int main(int argc, char* argv[]) {
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
     bool changing_velocity_of_obj = false;
+    GridSettings grid_settings {};
+
+    SimulationSettings settings {
+        delta_time, substeps_per_frame,
+        selected_sensitivity, objects_scale,
+        paused, velocity_arrow_scale,
+        grid_settings
+    };
 
     auto calculate_starting_point_of_velocity_line = [](const Object& selected, const SimulationSettings& settings) {
         auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
@@ -174,13 +181,6 @@ int main(int argc, char* argv[]) {
 
     // Main game loop
     while (!WindowShouldClose()) {
-        SimulationSettings settings {
-            delta_time, substeps_per_frame,
-            selected_sensitivity, objects_scale,
-            spacetime_curve_factor, paused,
-            velocity_arrow_scale
-        };
-
         camera_pan_enabled = IsCursorHidden();
         if (camera_pan_enabled)
             UpdateCamera(&camera, simulation.current_selected_object == -1 ? CAMERA_FREE : CAMERA_CUSTOM);
