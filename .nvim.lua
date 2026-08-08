@@ -19,4 +19,5 @@ vim.keymap.set('n', '<leader>fp', function() vim.cmd.edit('./src/Preset.hpp') en
 vim.keymap.set('n', '<leader>fs', function() vim.cmd.edit('./src/SimulationScreen.hpp') end)
 vim.keymap.set('n', '<leader>fo', function() vim.cmd.edit('./src/Object.hpp') end)
 vim.keymap.set('n', '<leader>fO', function() vim.cmd.edit('./src/ui/ObjectEditor.hpp') end)
+vim.keymap.set('n', '<leader>fi', function() vim.cmd.edit('./src/FontIcons.hpp') end)
 
