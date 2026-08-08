@@ -1,6 +1,7 @@
 #pragma once
 
 #include "imgui.h"
+#include <optional>
 #include <variant>
 
 struct RAIIWindow {
@@ -80,8 +81,8 @@ struct NextWindowPosition {
     Position right = AutoPosition {};
     Position left = AutoPosition {};
 
-    float pivot_x = 0.5f;
-    float pivot_y = 0.5f;
+    std::optional<float> pivot_x = std::nullopt;
+    std::optional<float> pivot_y = std::nullopt;
 
     // Sets top = 50%, pivot_y = 0.5f. Also resets `bottom` to AutoPosition
     NextWindowPosition& center_vertically();

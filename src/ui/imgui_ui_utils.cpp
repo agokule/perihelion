@@ -34,18 +34,26 @@ struct AxisResult {
 // both edges are set, the pivot collapses to the near edge and a size is
 // returned that stretches the window to exactly fill the gap between them --
 // like CSS position: absolute with both `top` and `bottom` set.
-AxisResult resolve_axis(const Position& near, const Position& far, float display_size, float pivot) {
+AxisResult resolve_axis(const Position& near, const Position& far, float display_size, std::optional<float> pivot) {
     if (!holds_alternative<AutoPosition>(near) && !holds_alternative<AutoPosition>(far)) {
         float near_px = static_cast<float>(get<int>(near));
         float far_px = static_cast<float>(get<int>(far));
         return {near_px, 0.0f, display_size - near_px - far_px};
     }
 
-    AxisResult result {0.0f, pivot, std::nullopt};
-    if (auto p = resolve_position(near, display_size, false))
+    AxisResult result {0.0f, 0.0f, std::nullopt};
+    if (auto p = resolve_position(near, display_size, false)) {
         result.position = *p;
-    if (auto p = resolve_position(far, display_size, true))
+        if (!pivot)
+            result.pivot = 0.0f;
+    } else if (auto p = resolve_position(far, display_size, true)) {
         result.position = *p;
+        if (!pivot)
+            result.pivot = 1.0f;
+    }
+
+    if (pivot)
+        result.pivot = *pivot;
     return result;
 }
 
