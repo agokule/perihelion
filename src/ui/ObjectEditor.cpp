@@ -1,5 +1,6 @@
 #include "ObjectEditor.hpp"
 #include "FontIcons.hpp"
+#include "ui/imgui_ui_utils.hpp"
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <variant>
@@ -8,8 +9,7 @@ using std::holds_alternative;
 using std::get;
 
 bool ObjectEditor(Object& obj) {
-    bool done_editiing = false;
-    ImGui::Begin("Object Editor");
+    RAIIWindow win {"Object Editor"};
 
     double max_mass = 1e40;
     double min_mass = 1e18;
@@ -69,10 +69,8 @@ bool ObjectEditor(Object& obj) {
     }
 
     if (ImGui::Button("Done Editing"))
-        done_editiing = true;
+        return true;
 
-    ImGui::End();
-
-    return done_editiing;
+    return false;
 }
 

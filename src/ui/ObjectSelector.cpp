@@ -3,6 +3,7 @@
 #include "FontIcons.hpp"
 #include "Object.hpp"
 #include "imgui.h"
+#include "ui/imgui_ui_utils.hpp"
 #include <algorithm>
 #include <format>
 
@@ -28,14 +29,15 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
         | ImGuiWindowFlags_NoFocusOnAppearing
         | ImGuiWindowFlags_NoNav;
 
-    ImGui::Begin("##ObjectSelector", nullptr, flags);
+    RAIIWindow win {"##ObjectSelector", nullptr, flags};
 
     // -1 (None) is a selectable position: Previous steps down into it,
     // Next steps back out of it. It's the only way to get the free camera.
-    ImGui::BeginDisabled(!has_objects || selected < 0);
-    if (ImGui::Button(NF_FA_ARROW_LEFT_LONG))
-        selected--;
-    ImGui::EndDisabled();
+    {
+        RAIIDisabled d {!has_objects || selected < 0};
+        if (ImGui::Button(NF_FA_ARROW_LEFT_LONG))
+            return selected - 1;
+    }
 
     ImGui::SameLine();
 
@@ -51,33 +53,35 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
         ? get_preview_text(objects[selected]).c_str()
         : "None";
 
-    ImGui::BeginDisabled(!has_objects);
-    if (ImGui::BeginCombo("##ObjectSelectorCombo", preview.c_str())) {
-        bool none_selected = (selected == -1);
-        if (ImGui::Selectable("None", none_selected))
-            selected = -1;
-        if (none_selected)
-            ImGui::SetItemDefaultFocus();
-
-        for (int i = 0; i < (int)objects.size(); i++) {
-            bool is_selected = (i == selected);
-            if (ImGui::Selectable(get_preview_text(objects[i]).c_str(), is_selected))
-                selected = i;
-            if (is_selected)
+    {
+        RAIIDisabled d {!has_objects};
+        const RAIICombo c {"##ObjectSelectorCombo", preview.c_str()};
+        if (c) {
+            bool none_selected = (selected == -1);
+            if (ImGui::Selectable("None", none_selected)) {
+                selected = -1;
+                none_selected = true;
+            }
+            if (none_selected)
                 ImGui::SetItemDefaultFocus();
+
+            for (int i = 0; i < (int)objects.size(); i++) {
+                bool is_selected = (i == selected);
+                if (ImGui::Selectable(get_preview_text(objects[i]).c_str(), is_selected))
+                    selected = i;
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
         }
-        ImGui::EndCombo();
     }
-    ImGui::EndDisabled();
 
     ImGui::SameLine();
 
-    ImGui::BeginDisabled(!has_objects || selected >= (int)objects.size() - 1);
-    if (ImGui::Button(NF_FA_ARROW_RIGHT_LONG))
-        selected++;
-    ImGui::EndDisabled();
-
-    ImGui::End();
+    {
+        RAIIDisabled d {!has_objects || selected >= (int)objects.size() - 1};
+        if (ImGui::Button(NF_FA_ARROW_RIGHT_LONG))
+            return selected + 1;
+    }
 
     return selected;
 }
