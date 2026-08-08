@@ -46,8 +46,22 @@ struct AutoPosition {};
 // AutoPosition is the same as auto in CSS
 using Position = std::variant<int, float, AutoPosition>;
 
-// a positioning system that works like position: sticky;
-// in CSS.
+// A CSS-like positioning system for ImGuiSetNextWindowPos, driven by up to
+// four edge offsets (top/bottom/left/right) plus a pivot per axis.
+//
+// - One edge set on an axis (e.g. only `bottom`): positions the window that
+//   many pixels (int) or % of DisplaySize (float) from that edge, anchored
+//   using pivot_x/pivot_y as normal. This is like CSS `position: absolute`
+//   with only one of `top`/`bottom` set.
+// - Both edges set on an axis (e.g. `top` AND `bottom`): like CSS
+//   `position: absolute` with both edges set -- the window is stretched to
+//   exactly fill the gap between them, and the pivot for that axis is
+//   ignored (forced to the near edge). This calls ImGui::SetNextWindowSize
+//   internally, so it will fight ImGuiWindowFlags_AlwaysAutoResize on the
+//   same axis -- don't set both edges on an axis the window also
+//   auto-resizes.
+// - Neither edge set on an axis: that axis is left at 0, same as never
+//   touching it.
 struct NextWindowPosition {
     Position top = AutoPosition {};
     Position bottom = AutoPosition {};
@@ -57,10 +71,13 @@ struct NextWindowPosition {
     float pivot_x = 0.5f;
     float pivot_y = 0.5f;
 
+    // Sets top = 50%, pivot_y = 0.5f. Also resets `bottom` to AutoPosition
     NextWindowPosition& center_vertically();
-    NextWindowPosition& center_horizontally();
 
+    // Sets left = 50%, pivot_x = 0.5f. Also resets `right` to AutoPosition
+    NextWindowPosition& center_horizontally();
 };
 
+// see NextWindowPosition's comment for more details
 void ImGuiSetNextWindowPos(NextWindowPosition pos, ImGuiCond cond = 0);
 
