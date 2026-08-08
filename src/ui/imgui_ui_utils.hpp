@@ -39,6 +39,18 @@ struct RAIICombo {
     }
 };
 
+struct RAIIStyleVar {
+    RAIIStyleVar(ImGuiStyleVar idx, float val) {
+        ImGui::PushStyleVar(idx, val);
+    }
+    RAIIStyleVar(ImGuiStyleVar idx, const ImVec2& val) {
+        ImGui::PushStyleVar(idx, val);
+    }
+    ~RAIIStyleVar() {
+        ImGui::PopStyleVar();
+    }
+};
+
 struct AutoPosition {};
 
 // int's represent pixel values,

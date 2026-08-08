@@ -12,6 +12,7 @@ std::string get_preview_text(const Object& obj) {
 }
 
 int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
+    RAIIStyleVar s1 {ImGuiStyleVar_WindowPadding, {4.0f, 4.0f}};
     const bool has_objects = !objects.empty();
     int selected = has_objects ? current_selected : -1;
 
