@@ -150,6 +150,9 @@ int main(int argc, char* argv[]) {
     bool changing_velocity_of_obj = false;
     GridSettings grid_settings {};
 
+    bool demo_shown = false;
+    bool metrics_shown = false;
+
     SimulationSettings settings {
         delta_time, substeps_per_frame,
         selected_sensitivity, objects_scale,
@@ -233,6 +236,11 @@ int main(int argc, char* argv[]) {
                 // start ImGui Conent
                 rlImGuiBegin();
 
+                if (demo_shown)
+                    ImGui::ShowDemoWindow(&demo_shown);
+                if (metrics_shown)
+                    ImGui::ShowMetricsWindow(&metrics_shown);
+
                 if (adding_object) {
                     adding_object->draw_outline(settings.objects_scale, camera);
                     adding_object->draw_label(camera);
@@ -254,6 +262,11 @@ int main(int argc, char* argv[]) {
                     ) {
                         change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings);
                     }
+
+                    if (IsKeyPressed(KEY_Z))
+                        demo_shown = !demo_shown;
+                    if (IsKeyPressed(KEY_X))
+                        metrics_shown = !metrics_shown;
                 }
                 if ((!velocity_cone || simulation.current_selected_object == -1) && changing_velocity_of_obj)
                     changing_velocity_of_obj = false;
