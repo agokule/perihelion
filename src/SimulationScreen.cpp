@@ -16,6 +16,7 @@
 #include "raylib.h"
 #include "ui/ObjectSelector.hpp"
 #include "utils.hpp"
+#include "rlgl.h"
 
 namespace {
     constexpr double gravitational_constant = 6.6743e-11;
@@ -169,6 +170,10 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
     // map to x/z values exactly spacing_between_slices apart, even across 0
     int horiz_offset = static_cast<int>(std::floor(center.x / spacing_between_slices));
     int depth_offset = static_cast<int>(std::floor(center.z / spacing_between_slices));
+    
+    rlBegin(RL_LINES);
+
+    rlColor4ub(255, 255, 255, 200);
 
     for (int horiz = -slices; horiz <= slices; horiz++) {
         int adj_horiz = horiz + horiz_offset;
@@ -198,16 +203,22 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
                 Vector3 left_point = point;
                 left_point.x -= spacing_between_slices;
                 left_point.y = grid_y_values[(horiz_vector_idx - 1) * grid_dimensions + depth_vector_idx];
-                DrawLine3D(left_point, point, WHITE);
+
+                rlVertex3f(left_point.x, left_point.y, left_point.z);
+                rlVertex3f(point.x, point.y, point.z);
             }
             if (depth_vector_idx > 0) {
                 Vector3 up_point = point;
                 up_point.z -= spacing_between_slices;
                 up_point.y = grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx - 1];
-                DrawLine3D(up_point, point, WHITE);
+
+                rlVertex3f(up_point.x, up_point.y, up_point.z);
+                rlVertex3f(point.x, point.y, point.z);
             }
         }
     }
+
+    rlEnd();
 }
 
 void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) const {
