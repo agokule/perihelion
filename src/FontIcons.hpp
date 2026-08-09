@@ -23,6 +23,9 @@
 #define NF_MD_RADIUS_OUTLINE "\U000f0cc1"
 #define NF_MD_EARTH "\U000f01e7"
 #define NF_MD_MOON_NEW "\U000f0f64"
+#define NF_MD_GRID "\U000f02c1"
+#define NF_MD_GRID_OFF "\U000f02c2"
+#define NF_MD_VECTOR_CURVE "\U000f0559"
 
 #define NF_COD_QUESTION "\ueb32"
 
