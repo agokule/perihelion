@@ -15,6 +15,7 @@
 // for some reason, imgui displays this as nf-fa-dice
 // or "\uedec"
 #define NF_OCT_SUN "\uf522"
+#define NF_OCT_X "\uf467"
 
 #define NF_WEATHER_DAY_SUNNY "\ue30d"
 

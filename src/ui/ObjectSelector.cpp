@@ -74,7 +74,14 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
     }
 
     ImGui::SameLine();
+    {
+        RAIIDisabled d {selected == -1};
+        if (ImGui::Button(NF_OCT_X))
+            return -1;
+    }
 
+
+    ImGui::SameLine();
     {
         RAIIDisabled d {!has_objects || selected >= (int)objects.size() - 1};
         if (ImGui::Button(NF_FA_ARROW_RIGHT_LONG))
