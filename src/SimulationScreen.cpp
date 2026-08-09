@@ -137,14 +137,14 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
     }
 }
 
-void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const SimulationSettings& settings) const {
-    int slices = settings.grid.curved_grid_slices;
-    int spacing_between_slices = settings.grid.spacing_between_slices;
+void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& settings) const {
+    int slices = settings.type == GridType::SpacetimeCurved ? settings.curved_grid_slices : settings.flat_grid_slices;
+    int spacing_between_slices = settings.spacing_between_slices;
     int grid_dimensions = slices * 2 + 1;
     double radius = slices * spacing_between_slices;
     Vector3 center { camera.position.x, 0, camera.position.z };
 
-    if (grid_y_values.empty())
+    if (grid_y_values.size() != grid_dimensions * grid_dimensions)
         grid_y_values.resize(std::pow(grid_dimensions, 2));
 
     double center_of_mass_y = 0;
@@ -162,6 +162,9 @@ void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const Si
     center.y = -vertical_shift;
     max_y_val = -std::numeric_limits<double>::infinity();
 
+    if (settings.type == GridType::Flat)
+        center.y = 0;
+
     // floor (not truncate) the camera offset so adjacent grid indices always
     // map to x/z values exactly spacing_between_slices apart, even across 0
     int horiz_offset = static_cast<int>(std::floor(center.x / spacing_between_slices));
@@ -177,14 +180,16 @@ void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const Si
             int depth_vector_idx = depth + slices;
 
             double y = 0;
-            for (const Object& obj: scene.objects) {
-                double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
-                double distance = convert_light_seconds_to_meters(obj.position.distance({(double)x, 0, (double)z}));
-                distance = std::max(distance, r_s); // Flamm's paraboloid is only defined for distance >= r_s
-                y += convert_meters_to_light_seconds(settings.grid.space_time_curve_factor * sqrt(r_s * (distance - r_s)));
+            if (settings.type == GridType::SpacetimeCurved) {
+                for (const Object& obj: scene.objects) {
+                    double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
+                    double distance = convert_light_seconds_to_meters(obj.position.distance({(double)x, 0, (double)z}));
+                    distance = std::max(distance, r_s); // Flamm's paraboloid is only defined for distance >= r_s
+                    y += convert_meters_to_light_seconds(settings.space_time_curve_factor * sqrt(r_s * (distance - r_s)));
+                }
+                max_y_val = std::max(max_y_val, y);
+                y += center.y;
             }
-            max_y_val = std::max(max_y_val, y);
-            y += center.y;
             grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx] = y;
 
             Vector3 point = {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
@@ -206,7 +211,7 @@ void SimulationScreen::draw_spacetime_curvature(const Camera3D& camera, const Si
 }
 
 void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettings& settings) const {
-    draw_spacetime_curvature(camera, settings);
+    draw_grid(camera, settings.grid);
 
     for (const Object& obj : scene.objects) {
         obj.draw_trail();

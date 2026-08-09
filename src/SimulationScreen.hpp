@@ -106,6 +106,7 @@ private:
     mutable std::vector<double> grid_y_values;
     mutable double max_y_val = -std::numeric_limits<double>::infinity();
 
-    // draws the spacetime curvature grid; must run inside Begin/EndMode3D
-    void draw_spacetime_curvature(const Camera3D& camera, const SimulationSettings& settings) const;
+    // draws the spacetime curvature grid, or normal grid depending on grid settings;
+    // must run inside Begin/EndMode3D
+    void draw_grid(const Camera3D& camera, const GridSettings& settings) const;
 };
