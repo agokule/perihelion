@@ -18,7 +18,7 @@ enum class GridType {
 
 struct GridSettings {
     int curved_grid_slices = 50;
-    int flat_grid_slices = 1000;
+    int flat_grid_slices = 100;
 
     GridType type = GridType::SpacetimeCurved;
 
