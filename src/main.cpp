@@ -120,6 +120,7 @@ int main(int argc, char* argv[]) {
     InitWindow(screenWidth, screenHeight, "Perihelion");
     SetTargetFPS(144);
     rlImGuiSetup(true);
+    IMGUI_CHECKVERSION();
 
     // Define the camera to look into our 3d world
     Camera3D camera = { 0 };
