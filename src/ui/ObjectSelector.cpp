@@ -18,7 +18,7 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
 
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGuiSetNextWindowPos(cent_horiz({ .top = 20 }));
+    ImGuiSetNextWindowPos(cent_horiz({ .top = 10 }));
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration
         | ImGuiWindowFlags_AlwaysAutoResize
