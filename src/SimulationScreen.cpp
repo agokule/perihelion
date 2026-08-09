@@ -139,6 +139,9 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
 }
 
 void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& settings) const {
+    if (settings.type == GridType::None)
+        return;
+
     int slices = settings.type == GridType::SpacetimeCurved ? settings.curved_grid_slices : settings.flat_grid_slices;
     int spacing_between_slices = settings.spacing_between_slices;
     int grid_dimensions = slices * 2 + 1;

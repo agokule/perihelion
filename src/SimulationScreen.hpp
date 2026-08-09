@@ -12,6 +12,7 @@
 enum class GridType {
     SpacetimeCurved,
     Flat,
+    None
     // maybe a 3D spacetime curvature visualization in the future?
 };
 
