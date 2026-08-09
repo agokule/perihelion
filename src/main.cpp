@@ -4,6 +4,7 @@
 #include "adjust.h"
 #include "imgui.h"
 #include "raymath.h"
+#include "ui/PlaybackControls.hpp"
 
 // disable rlImGui's font awesom
 #define NO_FONT_AWESOME
@@ -240,6 +241,8 @@ int main(int argc, char* argv[]) {
                     ImGui::ShowDemoWindow(&demo_shown);
                 if (metrics_shown)
                     ImGui::ShowMetricsWindow(&metrics_shown);
+
+                settings.paused = !PlaybackControls(!settings.paused, settings.delta_time);
 
                 if (adding_object) {
                     adding_object->draw_outline(settings.objects_scale, camera);

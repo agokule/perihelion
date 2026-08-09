@@ -7,6 +7,10 @@
 #define NF_FA_ARROW_LEFT_LONG "\uf177"
 #define NF_FA_PERSON_RUNNING "\uef0c"
 #define NF_FA_MOON "\uf186"
+#define NF_FA_PLAY "\uf04b"
+#define NF_FA_PAUSE "\uf04c"
+#define NF_FA_FAST_FORWARD "\uf050"
+#define NF_FA_FAST_BACKWARD "\uf049"
 
 // for some reason, imgui displays this as nf-fa-dice
 // or "\uedec"
