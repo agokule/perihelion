@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
 
     adjust_init();
 
-    ADJUST_CONST_INT(delta_time, 1);
+    ADJUST_CONST_FLOAT(delta_time, 1.0f);
     ADJUST_CONST_INT(substeps_per_frame, 500);
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
