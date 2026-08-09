@@ -15,6 +15,7 @@ void GridTypeEdit(GridSettings& grid_settings) {
         RAIIDisabled d {grid_settings.type == GridType::Flat};
         if (ImGui::Button(NF_MD_GRID))
             grid_settings.type = GridType::Flat;
+        ImGui::SetItemTooltip("Display a flat grid");
     }
 
     ImGui::SameLine();
@@ -23,6 +24,7 @@ void GridTypeEdit(GridSettings& grid_settings) {
         RAIIDisabled d {grid_settings.type == GridType::SpacetimeCurved};
         if (ImGui::Button(NF_MD_VECTOR_CURVE))
             grid_settings.type = GridType::SpacetimeCurved;
+        ImGui::SetItemTooltip("Display a grid that represents the curvature of spacetime");
     }
 
     ImGui::SameLine();
@@ -31,5 +33,6 @@ void GridTypeEdit(GridSettings& grid_settings) {
         RAIIDisabled d {grid_settings.type == GridType::None};
         if (ImGui::Button(NF_MD_GRID_OFF))
             grid_settings.type = GridType::None;
+        ImGui::SetItemTooltip("Don't display any grid, just pure emptiness");
     }
 }

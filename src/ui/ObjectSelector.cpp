@@ -78,6 +78,7 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
         RAIIDisabled d {selected == -1};
         if (ImGui::Button(NF_OCT_X))
             return -1;
+        ImGui::SetItemTooltip("Unselect the object, or let the camera be free");
     }
 
 
