@@ -1,3 +1,4 @@
+#include "FontIcons.hpp"
 #include "Object.hpp"
 #include "Vector3Double.hpp"
 #include "raylib.h"
@@ -6,6 +7,8 @@
 #include "raymath.h"
 #include "ui/GridTypeEdit.hpp"
 #include "ui/PlaybackControls.hpp"
+#include "ui/SettingsEdit.hpp"
+#include "ui/imgui_ui_utils.hpp"
 
 // disable rlImGui's font awesom
 #define NO_FONT_AWESOME
@@ -155,6 +158,7 @@ int main(int argc, char* argv[]) {
 
     bool demo_shown = false;
     bool metrics_shown = false;
+    bool settings_window_shown = false;
 
     SimulationSettings settings {
         delta_time, substeps_per_frame,
@@ -246,6 +250,16 @@ int main(int argc, char* argv[]) {
 
                 settings.paused = !PlaybackControls(!settings.paused, settings.delta_time);
                 GridTypeEdit(settings.grid);
+                {
+                    ImGuiSetNextWindowPos({ .top = 10, .right = 10 });
+                    RAIIStyleVar s {ImGuiStyleVar_WindowPadding, {4.0f, 4.0f}};
+                    RAIIStyleVar s2 {ImGuiStyleVar_WindowMinSize, {0, 0}};
+                    RAIIWindow win {"Open Settings", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings};
+                    if (ImGui::Button(NF_COD_SETTINGS_GEAR))
+                        settings_window_shown = !settings_window_shown;
+                }
+                if (settings_window_shown)
+                    SettingsEdit(settings, settings_window_shown);
 
                 if (adding_object) {
                     adding_object->draw_outline(settings.objects_scale, camera);

@@ -28,4 +28,5 @@
 #define NF_MD_VECTOR_CURVE "\U000f0559"
 
 #define NF_COD_QUESTION "\ueb32"
+#define NF_COD_SETTINGS_GEAR "\ueb51"
 
