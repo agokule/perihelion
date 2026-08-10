@@ -37,18 +37,21 @@ bool PlaybackControls(bool playing, float& speed) {
         RAIIDisabled d {it == speeds.begin()};
         if (ImGui::Button(NF_FA_FAST_BACKWARD))
             speed = *std::prev(it);
+        ImGui::SetItemTooltip("Make it go slower");
     }
     ImGui::SameLine();
 
     std::string_view text = playing ? NF_FA_PAUSE : NF_FA_PLAY;
     if (ImGui::Button(text.data()))
         return !playing;
+    ImGui::SetItemTooltip("Play/Pause (or press K)");
 
     {
         RAIIDisabled d {it == std::prev(speeds.end())};
         ImGui::SameLine();
         if (ImGui::Button(NF_FA_FAST_FORWARD))
             speed = *std::next(it);
+        ImGui::SetItemTooltip("Make it go faster");
     }
 
     ImGui::Text("%s", std::format("{}x", speed).c_str());
