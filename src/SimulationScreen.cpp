@@ -93,48 +93,46 @@ void SimulationScreen::add_object(const Object& obj) {
 
 void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings& settings,
                                       bool camera_pan_enabled, std::size_t frame_counter) {
-    int idx = -1;
-    for (const Object& obj : scene.objects) {
-        idx++;
-        if (current_selected_object != idx)
-            continue;
-        Vector2 mouseDelta = camera_pan_enabled ? GetMouseDelta() : Vector2{0, 0};
-        alpha -= mouseDelta.x * settings.selected_sensitivity;
-        beta  += mouseDelta.y * settings.selected_sensitivity;
+    if (current_selected_object == -1)
+        return;
 
-        // Clamp vertical angle to prevent flipping upside down
-        if (beta >  1.4f) beta =  1.4f;
-        if (beta < -1.4f) beta = -1.4f;
+    const Object& obj = scene.objects.at(current_selected_object);
+    Vector2 mouseDelta = camera_pan_enabled ? GetMouseDelta() : Vector2{0, 0};
+    alpha -= mouseDelta.x * settings.selected_sensitivity;
+    beta  += mouseDelta.y * settings.selected_sensitivity;
 
-        // Zoom with mouse scroll wheel
-        auto mouse_wheel_move = camera_pan_enabled ? GetMouseWheelMove() : 0;
-        distance -= mouse_wheel_move * wheel_sensitivity;
-        if (distance < obj.radius) distance = obj.radius; // Prevent going inside the object
+    // Clamp vertical angle to prevent flipping upside down
+    if (beta >  1.4f) beta =  1.4f;
+    if (beta < -1.4f) beta = -1.4f;
 
-        // Calculate camera position using spherical trigonometry
-        Vector3 camera_position{};
-        camera_position.x = obj.position.x + distance * cosf(beta) * sinf(alpha);
-        camera_position.y = obj.position.y + distance * sinf(beta);
-        camera_position.z = obj.position.z + distance * cosf(beta) * cosf(alpha);
+    // Zoom with mouse scroll wheel
+    auto mouse_wheel_move = camera_pan_enabled ? GetMouseWheelMove() : 0;
+    distance -= mouse_wheel_move * wheel_sensitivity;
+    if (distance < obj.radius) distance = obj.radius; // Prevent going inside the object
 
-        if (camera_position_lerp == -1.0f) {
-            camera.position = camera_position;
-            camera.target = obj.position.to_vector3();
-        } else {
-            camera_target_lerp = camera_target_lerp != 1
-                ? EaseSineIn(frame_counter - camera_lerp_start, 0.0f, 1.0f, ImGui::GetIO().Framerate * 2)
-                : 1;
-            if (frame_counter - camera_lerp_start >= ImGui::GetIO().Framerate) {
-                camera_target_lerp = 1;
-                camera_lerp_start = frame_counter;
-            }
-            if (camera_target_lerp == 1.0f)
-                camera_position_lerp = std::clamp(camera_position_lerp + 0.01f, 0.01f, 1.0f);
-            camera.position = Vector3Lerp(camera.position, camera_position, camera_position_lerp);
-            camera.target = Vector3Lerp(camera.target, obj.position.to_vector3(), camera_target_lerp);
-            if (camera_position_lerp == 1.0f)
-                camera_target_lerp = camera_position_lerp = -1.0f;
+    // Calculate camera position using spherical trigonometry
+    Vector3 camera_position{};
+    camera_position.x = obj.position.x + distance * cosf(beta) * sinf(alpha);
+    camera_position.y = obj.position.y + distance * sinf(beta);
+    camera_position.z = obj.position.z + distance * cosf(beta) * cosf(alpha);
+
+    if (camera_position_lerp == -1.0f) {
+        camera.position = camera_position;
+        camera.target = obj.position.to_vector3();
+    } else {
+        camera_target_lerp = camera_target_lerp != 1
+            ? EaseSineIn(frame_counter - camera_lerp_start, 0.0f, 1.0f, ImGui::GetIO().Framerate * 2)
+            : 1;
+        if (frame_counter - camera_lerp_start >= ImGui::GetIO().Framerate) {
+            camera_target_lerp = 1;
+            camera_lerp_start = frame_counter;
         }
+        if (camera_target_lerp == 1.0f)
+            camera_position_lerp = std::clamp(camera_position_lerp + 0.01f, 0.01f, 1.0f);
+        camera.position = Vector3Lerp(camera.position, camera_position, camera_position_lerp);
+        camera.target = Vector3Lerp(camera.target, obj.position.to_vector3(), camera_target_lerp);
+        if (camera_position_lerp == 1.0f)
+            camera_target_lerp = camera_position_lerp = -1.0f;
     }
 }
 
