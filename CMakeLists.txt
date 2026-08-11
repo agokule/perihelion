@@ -65,6 +65,12 @@ endif()
 target_compile_definitions(Perihelion PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 target_compile_definitions(Perihelion PRIVATE IMGUI_USER_CONFIG="ImConfig.hpp")
 
+if(MSVC)
+    target_compile_options(Perihelion PRIVATE $<$<CONFIG:Debug>:/Zi>)
+else()
+    target_compile_options(Perihelion PRIVATE $<$<CONFIG:Debug>:-g>)
+endif()
+
 target_include_directories(Perihelion PRIVATE 
     src
     dependencies/adjust/
