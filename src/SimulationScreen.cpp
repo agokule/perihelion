@@ -88,8 +88,7 @@ void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
     }
 }
 
-void SimulationScreen::select_object(ObjectSelection selection, const SimulationSettings& settings,
-                                     std::size_t frame_counter) {
+void SimulationScreen::select_object(ObjectSelection selection, const SimulationSettings& settings) {
     if (current_selected_object == selection.idx || settings.paused)
         return;
 
@@ -118,7 +117,7 @@ void SimulationScreen::add_object(const Object& obj) {
 }
 
 void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings& settings,
-                                      bool camera_pan_enabled, std::size_t frame_counter) {
+                                      bool camera_pan_enabled) {
     if (current_selected_object == -1)
         return;
 

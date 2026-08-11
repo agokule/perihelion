@@ -59,7 +59,7 @@ public:
     // follows the selected object, if any; must run before draw_world so the
     // camera is up to date for this frame's render
     void update_camera(Camera3D& camera, const SimulationSettings& settings,
-                        bool camera_pan_enabled, std::size_t frame_counter);
+                        bool camera_pan_enabled);
 
     // draws the grid, trails and objects; wraps its own Begin/EndMode3D
     void draw_world(const Camera3D& camera, const SimulationSettings& settings) const;
@@ -70,7 +70,7 @@ public:
     std::optional<ObjectSelection> draw_object_selection_ui(Camera3D& camera, const SimulationSettings& settings);
 
     // makes idx the selected object and starts the camera lerp toward it
-    void select_object(ObjectSelection selection, const SimulationSettings& settings, std::size_t frame_counter);
+    void select_object(ObjectSelection selection, const SimulationSettings& settings);
 
     // the camera's offset from the object it's currently following, kept in
     // double precision. camera.position/camera.target (raylib's float32

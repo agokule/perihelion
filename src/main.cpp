@@ -141,8 +141,6 @@ int main(int argc, char* argv[]) {
     bool paused = false;
     bool camera_pan_enabled = true;
 
-    size_t frame_counter = 0;
-
     DisableCursor();
 
     SetExitKey(KEY_NULL);
@@ -209,7 +207,7 @@ int main(int argc, char* argv[]) {
                     DisableCursor();
 
                 simulation.simulate_physics(settings);
-                simulation.update_camera(camera, settings, camera_pan_enabled, frame_counter);
+                simulation.update_camera(camera, settings, camera_pan_enabled);
 
                 BeginMode3D(camera);
                 skybox.draw();
@@ -268,11 +266,11 @@ int main(int argc, char* argv[]) {
                 }
 
                 if (auto selection = simulation.draw_object_selection_ui(camera, settings))
-                    simulation.select_object(*selection, settings, frame_counter);
+                    simulation.select_object(*selection, settings);
                 
                 if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
                     if (!IsCursorHidden() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !adding_object) {
-                        simulation.select_object({-1, 0}, settings, frame_counter);
+                        simulation.select_object({-1, 0}, settings);
                         right_click_location = GetMousePosition();
                         ImGui::OpenPopup("Right Click Menu");
                     }
@@ -335,7 +333,6 @@ int main(int argc, char* argv[]) {
         }
 
         EndDrawing();
-        frame_counter++;
     }
 
     // De-Initialization
