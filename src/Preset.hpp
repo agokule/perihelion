@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Object.hpp"
-#include <filesystem>
 #include <vector>
 #include <raylib.h>
 #include <string>

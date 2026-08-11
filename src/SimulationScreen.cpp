@@ -4,16 +4,13 @@
 #include <chrono>
 #include <cmath>
 #include <imgui.h>
-#include <iostream>
 #include <limits>
 #include <raymath.h>
 #include <reasings.h>
-#include <string>
 #include <vector>
 
 #include "Object.hpp"
 #include "Vector3Double.hpp"
-#include "adjust.h"
 #include "raylib.h"
 #include "ui/ObjectSelector.hpp"
 #include "utils.hpp"

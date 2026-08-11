@@ -106,7 +106,6 @@ void change_velocity_using_cone(
     }
     if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
         changing_velocity_of_obj = false;
-    std::cout << "changing_velocity_of_obj: " << changing_velocity_of_obj << '\n';
 }
 
 int main(int argc, char* argv[]) {
