@@ -1,6 +1,7 @@
 #include "SimulationScreen.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <imgui.h>
 #include <iostream>
@@ -17,6 +18,9 @@
 #include "ui/ObjectSelector.hpp"
 #include "utils.hpp"
 #include "rlgl.h"
+
+using namespace std::chrono;
+using namespace std::chrono_literals;
 
 namespace {
     constexpr double gravitational_constant = 6.6743e-11;
@@ -92,7 +96,7 @@ void SimulationScreen::select_object(ObjectSelection selection, const Simulation
     current_selected_object = selection.idx;
     distance = std::clamp(selection.radius * 5 * settings.objects_scale, 0.1, 1e100);
     camera_target_lerp = camera_position_lerp = 0.0f;
-    camera_lerp_start = frame_counter;
+    camera_lerp_start = steady_clock::now();
 }
 
 Vector3Double SimulationScreen::camera_offset_from_selected() const {
@@ -145,15 +149,20 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
         if (camera_target_lerp == 0.0f)
             camera_target_lerp_start_target = camera.target;
 
+        auto now = steady_clock::now();
+
         camera_target_lerp = camera_target_lerp != 1
-            ? EaseSineInOut(frame_counter - camera_lerp_start, 0.0f, 1.0f, ImGui::GetIO().Framerate)
+            ? EaseSineInOut(duration_cast<milliseconds>(now - camera_lerp_start).count(), 0.0f, 1.0f, 1000.0f)
             : 1;
-        if (frame_counter - camera_lerp_start >= ImGui::GetIO().Framerate) {
-            camera_target_lerp = 1;
-            camera_lerp_start = frame_counter;
+        if (now - camera_lerp_start >= 1s) {
+            if (camera_target_lerp != 1)
+                camera_target_lerp = 1;
+            else if (camera_position_lerp != 1)
+                camera_position_lerp = 1;
+            camera_lerp_start = now;
         }
-        if (camera_target_lerp == 1.0f)
-            camera_position_lerp = std::clamp(camera_position_lerp + 0.01f, 0.01f, 1.0f);
+        if (camera_target_lerp == 1.0f && camera_position_lerp != 1.0f)
+            camera_position_lerp = EaseCircIn(duration_cast<milliseconds>(now - camera_lerp_start).count(), 0.0f, 1.0f, 1000.0f);
         camera.position = Vector3Lerp(camera.position, camera_position, camera_position_lerp);
 
         // turn towards the new target by rotating the look direction

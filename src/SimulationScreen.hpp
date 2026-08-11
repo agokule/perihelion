@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstddef>
 #include <limits>
 #include <optional>
@@ -100,7 +101,7 @@ private:
 
     float camera_position_lerp = -1.0f;
     float camera_target_lerp = -1.0f;
-    std::size_t camera_lerp_start = 0;
+    std::chrono::time_point<std::chrono::steady_clock> camera_lerp_start;
     // camera.target captured the instant a target lerp starts, so the turn
     // has a fixed start direction to slerp away from instead of re-deriving
     // it from a target that's already mid-lerp
