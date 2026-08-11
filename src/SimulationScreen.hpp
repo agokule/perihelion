@@ -101,6 +101,10 @@ private:
     float camera_position_lerp = -1.0f;
     float camera_target_lerp = -1.0f;
     std::size_t camera_lerp_start = 0;
+    // camera.target captured the instant a target lerp starts, so the turn
+    // has a fixed start direction to slerp away from instead of re-deriving
+    // it from a target that's already mid-lerp
+    Vector3 camera_target_lerp_start_target{};
 
     // scratch buffer + one-frame-lagged smoothing value for the spacetime
     // curvature grid; not logical state, so draw_spacetime_curvature can stay const

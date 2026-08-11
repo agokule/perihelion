@@ -21,6 +21,28 @@
 namespace {
     constexpr double gravitational_constant = 6.6743e-11;
     constexpr double speed_of_light = 3e8;
+
+    // rotates `start` towards `end` by fraction t (0..1) along the shortest
+    // great-circle arc, so a direction turn happens at constant angular speed
+    Vector3 slerp_direction(Vector3 start, Vector3 end, float t) {
+        start = Vector3Normalize(start);
+        end = Vector3Normalize(end);
+        float dot = std::clamp(Vector3DotProduct(start, end), -1.0f, 1.0f);
+
+        // start/end are (near) opposite: the great-circle arc between them
+        // isn't unique, so pick an arbitrary axis to rotate around instead
+        // of falling into the degenerate (0-length) case below
+        if (dot < -0.9999f) {
+            Vector3 arbitrary = std::abs(start.x) < 0.9f ? Vector3{1, 0, 0} : Vector3{0, 1, 0};
+            Vector3 axis = Vector3Normalize(Vector3CrossProduct(start, arbitrary));
+            float theta = PI * t;
+            return start * cosf(theta) + axis * sinf(theta);
+        }
+
+        float theta = acosf(dot) * t;
+        Vector3 relative = Vector3Normalize(end - start * dot);
+        return start * cosf(theta) + relative * sinf(theta);
+    }
 }
 
 SimulationScreen::SimulationScreen(const Preset& initial_preset): scene{initial_preset} {
@@ -120,8 +142,11 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
         camera.position = camera_position;
         camera.target = obj.position.to_vector3();
     } else {
+        if (camera_target_lerp == 0.0f)
+            camera_target_lerp_start_target = camera.target;
+
         camera_target_lerp = camera_target_lerp != 1
-            ? EaseSineIn(frame_counter - camera_lerp_start, 0.0f, 1.0f, ImGui::GetIO().Framerate * 2)
+            ? EaseSineInOut(frame_counter - camera_lerp_start, 0.0f, 1.0f, ImGui::GetIO().Framerate)
             : 1;
         if (frame_counter - camera_lerp_start >= ImGui::GetIO().Framerate) {
             camera_target_lerp = 1;
@@ -130,7 +155,15 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
         if (camera_target_lerp == 1.0f)
             camera_position_lerp = std::clamp(camera_position_lerp + 0.01f, 0.01f, 1.0f);
         camera.position = Vector3Lerp(camera.position, camera_position, camera_position_lerp);
-        camera.target = Vector3Lerp(camera.target, obj.position.to_vector3(), camera_target_lerp);
+
+        // turn towards the new target by rotating the look direction
+        // (slerp) around the camera
+        Vector3 start_offset = camera_target_lerp_start_target - camera.position;
+        Vector3 end_offset = obj.position.to_vector3() - camera.position;
+        float target_distance = Lerp(Vector3Length(start_offset), Vector3Length(end_offset), camera_target_lerp);
+        Vector3 direction = slerp_direction(start_offset, end_offset, camera_target_lerp);
+        camera.target = camera.position + direction * target_distance;
+
         if (camera_position_lerp == 1.0f)
             camera_target_lerp = camera_position_lerp = -1.0f;
     }
