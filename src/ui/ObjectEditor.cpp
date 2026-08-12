@@ -52,6 +52,9 @@ bool ObjectEditor(Object& obj) {
             "%le c",
             ImGuiSliderFlags_AlwaysClamp
     );
+    if (ImGui::Button("Reverse Velocity"))
+        obj.velocity = -obj.velocity;
+
     if (holds_alternative<Color>(obj.drawing_info)) {
         Color& color = get<Color>(obj.drawing_info);
         float color_float[4] = {
