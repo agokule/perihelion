@@ -106,6 +106,14 @@ private:
     // has a fixed start direction to slerp away from instead of re-deriving
     // it from a target that's already mid-lerp
     Vector3 camera_target_lerp_start_target{};
+    // camera.position captured the instant a position lerp starts, so the
+    // move has a fixed start point to lerp away from. Without this, each
+    // frame re-lerps from the previous frame's already-moved position toward
+    // the (moving, since the followed object keeps orbiting) goal using the
+    // same eased t again -- as t approaches 1 the effective per-frame blend
+    // weight explodes, so any shift in the goal position near the end of the
+    // animation snaps the camera almost fully onto it, looking like a jitter/teleport
+    Vector3 camera_position_lerp_start_position{};
 
     // scratch buffer + one-frame-lagged smoothing value for the spacetime
     // curvature grid; not logical state, so draw_spacetime_curvature can stay const

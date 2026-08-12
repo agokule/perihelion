@@ -151,15 +151,21 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
             ? EaseSineInOut(duration_cast<milliseconds>(now - camera_lerp_start).count(), 0.0f, 1.0f, 1000.0f)
             : 1;
         if (now - camera_lerp_start >= 1s) {
-            if (camera_target_lerp != 1)
-                camera_target_lerp = 1;
+            if (camera_target_lerp != 1.0f)
+                camera_target_lerp = 1.0f;
             else if (camera_position_lerp != 1)
                 camera_position_lerp = 1;
             camera_lerp_start = now;
         }
+        // camera doesn't move during the target-turn phase, so keep capturing
+        // its (static) position as the position-lerp's start point right up
+        // until the position lerp actually begins
+        if (camera_target_lerp != 1.0f)
+            camera_position_lerp_start_position = camera.position;
+
         if (camera_target_lerp == 1.0f && camera_position_lerp != 1.0f)
-            camera_position_lerp = EaseCircIn(duration_cast<milliseconds>(now - camera_lerp_start).count(), 0.0f, 1.0f, 1000.0f);
-        camera.position = Vector3Lerp(camera.position, camera_position, camera_position_lerp);
+            camera_position_lerp = EaseCircInOut(duration_cast<milliseconds>(now - camera_lerp_start).count(), 0.0f, 1.0f, 1000.0f);
+        camera.position = Vector3Lerp(camera_position_lerp_start_position, camera_position, camera_position_lerp);
 
         // turn towards the new target by rotating the look direction
         // (slerp) around the camera
