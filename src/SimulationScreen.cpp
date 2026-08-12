@@ -205,7 +205,12 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
         center_of_mass_y /= total_mass;
 
     double vertical_shift = abs(center_of_mass_y - max_y_val);
-    center.y = -vertical_shift;
+    double difference = abs(vertical_shift - previous_vertical_shift);
+    if (difference >= 0.2 ) {
+        center.y = -vertical_shift;
+        previous_vertical_shift = vertical_shift;
+    } else
+        center.y = -previous_vertical_shift;
     max_y_val = -std::numeric_limits<double>::infinity();
 
     if (settings.type == GridType::Flat)

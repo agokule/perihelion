@@ -119,6 +119,7 @@ private:
     // curvature grid; not logical state, so draw_spacetime_curvature can stay const
     mutable std::vector<double> grid_y_values;
     mutable double max_y_val = -std::numeric_limits<double>::infinity();
+    mutable double previous_vertical_shift = 0;
 
     // draws the spacetime curvature grid, or normal grid depending on grid settings;
     // must run inside Begin/EndMode3D
