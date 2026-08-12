@@ -206,7 +206,7 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
 
     double vertical_shift = abs(center_of_mass_y - max_y_val);
     double difference = abs(vertical_shift - previous_vertical_shift);
-    if (difference >= 0.2 ) {
+    if (difference >= 0.2) {
         center.y = -vertical_shift;
         previous_vertical_shift = vertical_shift;
     } else
