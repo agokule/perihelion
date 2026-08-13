@@ -40,7 +40,7 @@ void handle_right_click_menu_action(
                 ObjectType::Planet,
                 std::format("New Object ({})", simulation.num_objects()),
                 1e20,
-                0.3,
+                0.005,
                 pos,
                 Vector3Zero(),
                 WHITE
