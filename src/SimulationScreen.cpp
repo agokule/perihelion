@@ -13,15 +13,16 @@
 #include "Vector3Double.hpp"
 #include "raylib.h"
 #include "ui/ObjectSelector.hpp"
-#include "utils.hpp"
 #include "rlgl.h"
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
 namespace {
-    constexpr double gravitational_constant = 6.6743e-11;
-    constexpr double speed_of_light = 3e8;
+    // in LightSecond^3/(kg s^2)
+    constexpr double gravitational_constant = 2.477e-36;
+    // in LightSecond/second
+    constexpr double speed_of_light = 1;
 
     // rotates `start` towards `end` by fraction t (0..1) along the shortest
     // great-circle arc, so a direction turn happens at constant angular speed
@@ -69,14 +70,14 @@ void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
                 if (obj2.name == obj.name)
                     continue;
 
-                double distance = convert_light_seconds_to_meters(obj.position.distance(obj2.position));
+                double distance = (obj.position.distance(obj2.position));
                 double distanceSqr = distance * distance;
                 double gravity_acceleration = gravitational_constant * obj2.mass / distanceSqr;
 
                 Vector3Double direction_of_acceleration = (obj2.position - obj.position).normalize();
 
                 Vector3Double acceleration = direction_of_acceleration * gravity_acceleration;
-                obj.accelerate(convert_meters_to_light_seconds(acceleration), settings.delta_time);
+                obj.accelerate((acceleration), settings.delta_time);
             }
         }
         for (Object& obj : scene.objects) {
@@ -238,9 +239,9 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
             if (settings.type == GridType::SpacetimeCurved) {
                 for (const Object& obj: scene.objects) {
                     double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
-                    double distance = convert_light_seconds_to_meters(obj.position.distance({(double)x, 0, (double)z}));
+                    double distance = obj.position.distance({(double)x, 0, (double)z});
                     distance = std::max(distance, r_s); // Flamm's paraboloid is only defined for distance >= r_s
-                    y += convert_meters_to_light_seconds(settings.space_time_curve_factor * sqrt(r_s * (distance - r_s)));
+                    y += settings.space_time_curve_factor * sqrt(r_s * (distance - r_s));
                 }
                 max_y_val = std::max(max_y_val, y);
                 y += center.y;
