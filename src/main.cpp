@@ -290,7 +290,7 @@ int main(int argc, char* argv[]) {
                     changing_velocity_of_obj = false;
 
                 if (simulation.current_selected_object != -1)
-                    ObjectEditor(simulation.get_object(simulation.current_selected_object));
+                    ObjectEditor(simulation.current_selected_object, simulation.get_object(simulation.current_selected_object), simulation.get_objects());
 
                 if (right_click_location) {
                     auto action = RightClickMenu(*right_click_location);

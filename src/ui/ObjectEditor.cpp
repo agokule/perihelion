@@ -1,6 +1,11 @@
 #include "ObjectEditor.hpp"
+#include "Constants.hpp"
 #include "FontIcons.hpp"
+#include "Object.hpp"
+#include "Vector3Double.hpp"
+#include "ui/ObjectSelectorCombo.hpp"
 #include "ui/imgui_ui_utils.hpp"
+#include <cmath>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <variant>
@@ -8,7 +13,7 @@
 using std::holds_alternative;
 using std::get;
 
-bool ObjectEditor(Object& obj) {
+bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs) {
     RAIIWindow win {"Object Editor"};
 
     double max_mass = 1e40;
@@ -41,6 +46,7 @@ bool ObjectEditor(Object& obj) {
             "%le light-seconds",
             ImGuiSliderFlags_AlwaysClamp
     );
+    ImGui::SeparatorText("Velocity things");
     ImGui::DragScalarN(
             NF_FA_PERSON_RUNNING " Velocity:",
             ImGuiDataType_Double,
@@ -54,6 +60,24 @@ bool ObjectEditor(Object& obj) {
     );
     if (ImGui::Button("Reverse Velocity"))
         obj.velocity = -obj.velocity;
+
+    static int selected = -1;
+    ImGui::Text("Select an object (not this one!): ");
+    ImGui::SameLine();
+    selected = ObjectSelectorCombo(objs, selected);
+    if (selected != -1 && selected != obj_idx) {
+        const Object& other = objs.at(selected);
+        if (ImGui::Button("Orbit this object")) {
+            double standard_gravitational_parameter = gravitational_constant * other.mass;
+            double distance = obj.position.distance(other.position);
+            double velocity_magnitude = sqrt(standard_gravitational_parameter / distance);
+            Vector3Double direction = (other.position - obj.position).normalize();
+            Vector3Double new_velocity {Vector3RotateByAxisAngle(direction.to_vector3(), {0, 1, 0}, 90) * velocity_magnitude};
+
+            new_velocity += other.velocity;
+            obj.velocity = new_velocity;
+        }
+    }
 
     if (holds_alternative<Color>(obj.drawing_info)) {
         Color& color = get<Color>(obj.drawing_info);
