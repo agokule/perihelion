@@ -9,6 +9,7 @@
 #include <reasings.h>
 #include <vector>
 
+#include "Constants.hpp"
 #include "Object.hpp"
 #include "Vector3Double.hpp"
 #include "raylib.h"
@@ -19,11 +20,6 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 namespace {
-    // in LightSecond^3/(kg s^2)
-    constexpr double gravitational_constant = 2.477e-36;
-    // in LightSecond/second
-    constexpr double speed_of_light = 1;
-
     // rotates `start` towards `end` by fraction t (0..1) along the shortest
     // great-circle arc, so a direction turn happens at constant angular speed
     Vector3 slerp_direction(Vector3 start, Vector3 end, float t) {
