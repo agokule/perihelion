@@ -89,6 +89,8 @@ public:
 
     Object& get_object(size_t idx) { return scene.objects.at(idx); }
 
+    const std::vector<Object>& get_objects() const { return scene.objects; }
+
     int current_selected_object = -1;
 
 private:
