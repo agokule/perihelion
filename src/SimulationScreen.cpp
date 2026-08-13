@@ -87,7 +87,7 @@ void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
 }
 
 void SimulationScreen::select_object(ObjectSelection selection, const SimulationSettings& settings) {
-    if (current_selected_object == selection.idx || settings.paused)
+    if (current_selected_object == selection.idx)
         return;
 
     current_selected_object = selection.idx;

@@ -264,7 +264,8 @@ int main(int argc, char* argv[]) {
                     DrawText("Press Enter to confirm", 10, 10, 24, WHITE);
                 }
 
-                if (auto selection = simulation.draw_object_selection_ui(camera, settings))
+                auto selection = simulation.draw_object_selection_ui(camera, settings);
+                if (selection && !adding_object)
                     simulation.select_object(*selection, settings);
                 
                 if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
