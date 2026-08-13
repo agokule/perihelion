@@ -67,12 +67,27 @@ bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs) {
     selected = ObjectSelectorCombo(objs, selected);
     if (selected != -1 && selected != obj_idx) {
         const Object& other = objs.at(selected);
+        static int axis = 1;
+        ImGui::Text("Select an Axis:");
+        ImGui::RadioButton("X", &axis, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Y", &axis, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Z", &axis, 2);
+
         if (ImGui::Button("Orbit this object")) {
             double standard_gravitational_parameter = gravitational_constant * other.mass;
             double distance = obj.position.distance(other.position);
             double velocity_magnitude = sqrt(standard_gravitational_parameter / distance);
             Vector3Double direction = (other.position - obj.position).normalize();
-            Vector3Double new_velocity {Vector3RotateByAxisAngle(direction.to_vector3(), {0, 1, 0}, 90) * velocity_magnitude};
+
+            Vector3 axis_vec {0, 1, 0};
+            if (axis == 0)
+                axis_vec = {1, 0, 0};
+            else if (axis == 2)
+                axis_vec = {0, 0, 1};
+
+            Vector3Double new_velocity {Vector3RotateByAxisAngle(direction.to_vector3(), axis_vec, 90) * velocity_magnitude};
 
             new_velocity += other.velocity;
             obj.velocity = new_velocity;
