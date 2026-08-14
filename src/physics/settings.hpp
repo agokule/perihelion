@@ -21,13 +21,13 @@ struct GridSettings {
 
 // tunable values that come from adjust.h and may be re-read every frame
 struct SimulationSettings {
-    float& delta_time;
-    int& substeps_per_frame;
-    float& selected_sensitivity;
-    float& objects_scale;
-    bool& paused;
-    float& velocity_arrow_scale;
-    GridSettings& grid;
+    float delta_time;
+    int substeps_per_frame;
+    float selected_sensitivity;
+    float objects_scale;
+    bool paused;
+    float velocity_arrow_scale;
+    GridSettings grid;
 };
 
 // an object the user picked this frame, either via the radio button list or

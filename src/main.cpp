@@ -116,9 +116,6 @@ int main(int argc, char* argv[]) {
 
     adjust_init();
 
-    ADJUST_CONST_FLOAT(delta_time, 1.0f);
-    ADJUST_CONST_INT(substeps_per_frame, 500);
-
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Perihelion");
     SetTargetFPS(144);
@@ -133,12 +130,7 @@ int main(int argc, char* argv[]) {
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
-    ADJUST_CONST_STRING(text, "Perihelion");
     ADJUST_CONST_BOOL(adjust_live, false);
-    ADJUST_CONST_FLOAT(selected_sensitivity, 0.005f);
-    ADJUST_CONST_FLOAT(objects_scale, 10.0f);
-    ADJUST_CONST_FLOAT(velocity_arrow_scale, 5e3f);
-    bool paused = false;
     bool camera_pan_enabled = true;
 
     DisableCursor();
@@ -159,11 +151,15 @@ int main(int argc, char* argv[]) {
     bool settings_window_shown = false;
 
     SimulationSettings settings {
-        delta_time, substeps_per_frame,
-        selected_sensitivity, objects_scale,
-        paused, velocity_arrow_scale,
-        grid_settings
+        .delta_time = 1.0f,
+        .substeps_per_frame = 500,
+        .selected_sensitivity = 0.005f,
+        .objects_scale = 10.0f,
+        .paused = false,
+        .velocity_arrow_scale = 5e3f,
+        .grid = GridSettings {}
     };
+    std::optional<SimulationSettings> temp_state = std::nullopt;
 
     auto calculate_starting_point_of_velocity_line = [](const Object& selected, const SimulationSettings& settings) {
         auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
@@ -297,7 +293,7 @@ int main(int argc, char* argv[]) {
                     auto action = RightClickMenu(*right_click_location);
                     if (action) {
                         std::cout << (int)*action << '\n';
-                        handle_right_click_menu_action(action, camera, simulation, adding_object, paused);
+                        handle_right_click_menu_action(action, camera, simulation, adding_object, settings.paused);
                         right_click_location = std::nullopt;
                     }
                 }
@@ -324,11 +320,11 @@ int main(int argc, char* argv[]) {
                 changing_velocity_of_obj = false;
 
             if (IsKeyPressed(KEY_K))
-                paused = !paused;
+                settings.paused = !settings.paused;
 
             if (adding_object && IsKeyPressed(KEY_ENTER)) {
                 simulation.add_object(*adding_object);
-                paused = false;
+                settings.paused = false;
                 adding_object = std::nullopt;
             }
         }
