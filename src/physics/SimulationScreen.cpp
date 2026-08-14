@@ -240,8 +240,8 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
                     y += settings.space_time_curve_factor * sqrt(r_s * (distance - r_s));
                 }
                 max_y_val = std::max(max_y_val, y);
-                y += center.y;
             }
+            y += center.y;
             grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx] = y;
 
             Vector3 point = {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
