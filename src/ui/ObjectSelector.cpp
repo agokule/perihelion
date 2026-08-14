@@ -1,7 +1,7 @@
 #include "ui/ObjectSelector.hpp"
 
 #include "FontIcons.hpp"
-#include "Object.hpp"
+#include "physics/Object.hpp"
 #include "imgui.h"
 #include "ui/ObjectSelectorCombo.hpp"
 #include "ui/imgui_ui_utils.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Object.hpp"
+#include "physics/Object.hpp"
 #include <vector>
 
 // just a combo box of all the objects, includes icons as well.

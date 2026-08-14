@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Object.hpp"
+#include "physics/Object.hpp"
 #include <vector>
 
 // Draws a fixed overlay, anchored to the bottom-middle of the screen,

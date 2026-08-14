@@ -1,5 +1,5 @@
 #include "FontIcons.hpp"
-#include "Object.hpp"
+#include "physics/Object.hpp"
 #include "Vector3Double.hpp"
 #include "raylib.h"
 #include "adjust.h"
@@ -15,7 +15,7 @@
 #include "rlImGui.h"
 
 #include "AppState.hpp"
-#include "SimulationScreen.hpp"
+#include "physics/SimulationScreen.hpp"
 #include "Skybox.hpp"
 #include "ui/ObjectEditor.hpp"
 #include "ui/RightClickMenu.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Object.hpp"
+#include "physics/Object.hpp"
 #include <vector>
 
 // returns true if user is done editing

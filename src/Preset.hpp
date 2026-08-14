@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Object.hpp"
+#include "physics/Object.hpp"
 #include <vector>
 #include <raylib.h>
 #include <string>

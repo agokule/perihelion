@@ -1,4 +1,4 @@
-#include "SimulationScreen.hpp"
+#include "physics/SimulationScreen.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -9,8 +9,8 @@
 #include <reasings.h>
 #include <vector>
 
-#include "Constants.hpp"
-#include "Object.hpp"
+#include "physics/Constants.hpp"
+#include "physics/Object.hpp"
 #include "Vector3Double.hpp"
 #include "raylib.h"
 #include "ui/ObjectSelector.hpp"
