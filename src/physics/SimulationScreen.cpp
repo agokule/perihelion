@@ -211,7 +211,7 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
     max_y_val = -std::numeric_limits<double>::infinity();
 
     if (settings.type == GridType::Flat)
-        center.y = 0;
+        center.y = settings.flat_grid_y;
 
     // floor (not truncate) the camera offset so adjacent grid indices always
     // map to x/z values exactly spacing_between_slices apart, even across 0

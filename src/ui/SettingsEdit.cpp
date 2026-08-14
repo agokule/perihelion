@@ -27,6 +27,9 @@ void SettingsEdit(SimulationSettings& settings, bool& p_open) {
     ImGui::DragInt("Spacetime Curvature Factor", &settings.grid.space_time_curve_factor, 10, 1, 1000);
     HelpMarker("The calculated Spacetime curvature gets scaled by this amount so it is visible");
 
+    ImGui::DragFloat("Flat Grid Y-coordinate", &settings.grid.flat_grid_y, 0.1f, -1000, 1000);
+    HelpMarker("Move grid up or down by this many light-seconds. Only applies when flat grid is selected.");
+
     ImGui::PopItemWidth();
 }
 

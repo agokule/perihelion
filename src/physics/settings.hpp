@@ -11,6 +11,8 @@ struct GridSettings {
     int curved_grid_slices = 50;
     int flat_grid_slices = 100;
 
+    float flat_grid_y = 0;
+
     GridType type = GridType::SpacetimeCurved;
 
     int spacing_between_slices = 5;
