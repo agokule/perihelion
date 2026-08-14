@@ -49,6 +49,11 @@ void handle_right_click_menu_action(
             };
             temp_state = settings;
             temp_state->paused = true;
+            temp_state->grid.type = GridType::Flat;
+            temp_state->grid.flat_grid_y = 0.0f;
+            temp_state->grid.flat_grid_slices = 100;
+            temp_state->grid.spacing_between_slices = 2;
+            temp_state->grid.grid_color = GREEN;
             break;
         }
         case RightClickActionSelected::EditObject:
