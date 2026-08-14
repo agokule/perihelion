@@ -30,7 +30,8 @@ void handle_right_click_menu_action(
     const Camera& camera,
     const SimulationScreen& simulation,
     std::optional<Object>& adding_object,
-    bool& paused
+    const SimulationSettings& settings,
+    std::optional<SimulationSettings>& temp_state
 ) {
     switch (*action) {
         case RightClickActionSelected::CreateObject:
@@ -46,7 +47,8 @@ void handle_right_click_menu_action(
                 Vector3Zero(),
                 WHITE
             };
-            paused = true;
+            temp_state = settings;
+            temp_state->paused = true;
             break;
         }
         case RightClickActionSelected::EditObject:
@@ -160,6 +162,9 @@ int main(int argc, char* argv[]) {
         .grid = GridSettings {}
     };
     std::optional<SimulationSettings> temp_state = std::nullopt;
+    auto get_settings_state = [&settings, &temp_state]() -> SimulationSettings& {
+        return temp_state ? *temp_state : settings;
+    };
 
     auto calculate_starting_point_of_velocity_line = [](const Object& selected, const SimulationSettings& settings) {
         auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
@@ -202,12 +207,12 @@ int main(int argc, char* argv[]) {
                 if (adding_object && camera_pan_enabled)
                     DisableCursor();
 
-                simulation.simulate_physics(settings);
-                simulation.update_camera(camera, settings, camera_pan_enabled);
+                simulation.simulate_physics(get_settings_state());
+                simulation.update_camera(camera, get_settings_state(), camera_pan_enabled);
 
                 BeginMode3D(camera);
                 skybox.draw();
-                simulation.draw_world(camera, settings);
+                simulation.draw_world(camera, get_settings_state());
 
                 if (adding_object) {
                     Ray ray = GetScreenToWorldRay(GetMousePosition(), camera);
@@ -215,17 +220,17 @@ int main(int argc, char* argv[]) {
                     if (!pos.has_value())
                         pos = ray.position + ray.direction * 15;
                     adding_object->position = *pos;
-                    adding_object->draw(settings.objects_scale);
+                    adding_object->draw(get_settings_state().objects_scale);
                     adding_object->draw_trail();
                 }
                 if (simulation.current_selected_object != -1) {
                     // drawing the velocity vector of the current object
                     const auto& selected = simulation.get_object(simulation.current_selected_object);
 
-                    auto start = calculate_starting_point_of_velocity_line(selected, settings);
-                    auto end = start + selected.velocity * settings.velocity_arrow_scale;
+                    auto start = calculate_starting_point_of_velocity_line(selected, get_settings_state());
+                    auto end = start + selected.velocity * get_settings_state().velocity_arrow_scale;
 
-                    auto cone_height = selected.radius * settings.objects_scale / 20;
+                    auto cone_height = selected.radius * get_settings_state().objects_scale / 20;
 
                     velocity_cone = draw_3d_arrow(start, end, cone_height);
                 }
@@ -242,7 +247,7 @@ int main(int argc, char* argv[]) {
                 if (metrics_shown)
                     ImGui::ShowMetricsWindow(&metrics_shown);
 
-                settings.paused = !PlaybackControls(!settings.paused, settings.delta_time);
+                get_settings_state().paused = !PlaybackControls(!get_settings_state().paused, get_settings_state().delta_time);
                 GridTypeEdit(settings.grid);
                 {
                     ImGuiSetNextWindowPos({ .top = 10, .right = 10 });
@@ -256,7 +261,7 @@ int main(int argc, char* argv[]) {
                     SettingsEdit(settings, settings_window_shown);
 
                 if (adding_object) {
-                    adding_object->draw_outline(settings.objects_scale, camera);
+                    adding_object->draw_outline(get_settings_state().objects_scale, camera);
                     adding_object->draw_label(camera);
                     DrawText("Press Enter to confirm", 10, 10, 24, WHITE);
                 }
@@ -293,7 +298,7 @@ int main(int argc, char* argv[]) {
                     auto action = RightClickMenu(*right_click_location);
                     if (action) {
                         std::cout << (int)*action << '\n';
-                        handle_right_click_menu_action(action, camera, simulation, adding_object, settings.paused);
+                        handle_right_click_menu_action(action, camera, simulation, adding_object, settings, temp_state);
                         right_click_location = std::nullopt;
                     }
                 }
@@ -324,7 +329,7 @@ int main(int argc, char* argv[]) {
 
             if (adding_object && IsKeyPressed(KEY_ENTER)) {
                 simulation.add_object(*adding_object);
-                settings.paused = false;
+                temp_state = std::nullopt;
                 adding_object = std::nullopt;
             }
         }
