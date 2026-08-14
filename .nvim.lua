@@ -16,8 +16,8 @@ end)
 
 vim.keymap.set('n', '<leader>fm', function() vim.cmd.edit('./src/main.cpp') end)
 vim.keymap.set('n', '<leader>fp', function() vim.cmd.edit('./src/Preset.hpp') end)
-vim.keymap.set('n', '<leader>fs', function() vim.cmd.edit('./src/SimulationScreen.hpp') end)
-vim.keymap.set('n', '<leader>fo', function() vim.cmd.edit('./src/Object.hpp') end)
+vim.keymap.set('n', '<leader>fs', function() vim.cmd.edit('./src/physics/SimulationScreen.hpp') end)
+vim.keymap.set('n', '<leader>fo', function() vim.cmd.edit('./src/physics/Object.hpp') end)
 vim.keymap.set('n', '<leader>fO', function() vim.cmd.edit('./src/ui/ObjectEditor.hpp') end)
 vim.keymap.set('n', '<leader>fi', function() vim.cmd.edit('./src/FontIcons.hpp') end)
 
