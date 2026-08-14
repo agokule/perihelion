@@ -9,7 +9,6 @@ FetchContent_Declare(
     raylib
     GIT_REPOSITORY https://github.com/raysan5/raylib.git
     GIT_TAG dbc56a87da87d973a9c5baa4e7438a9d20121d28
-    PATCH_COMMAND git restore . && git apply --ignore-whitespace "${CMAKE_CURRENT_SOURCE_DIR}/patches/raylib-increase-camera-pan-speed.patch"
 )
 FetchContent_GetProperties(raylib)
 if (NOT raylib_POPULATED) # Have we downloaded raylib yet?

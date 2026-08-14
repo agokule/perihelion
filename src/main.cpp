@@ -9,6 +9,7 @@
 #include "ui/PlaybackControls.hpp"
 #include "ui/SettingsEdit.hpp"
 #include "ui/imgui_ui_utils.hpp"
+#include "viewport/camera.hpp"
 
 // disable rlImGui's font awesom
 #define NO_FONT_AWESOME
@@ -190,7 +191,7 @@ int main(int argc, char* argv[]) {
     while (!WindowShouldClose()) {
         camera_pan_enabled = IsCursorHidden();
         if (camera_pan_enabled)
-            UpdateCamera(&camera, simulation.current_selected_object == -1 ? CAMERA_FREE : CAMERA_CUSTOM);
+            update_camera(&camera, simulation.current_selected_object == -1 ? CAMERA_FREE : CAMERA_CUSTOM);
 
         BeginDrawing();
         ClearBackground(DARKGRAY);
