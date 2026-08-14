@@ -1,6 +1,6 @@
 #pragma once
 
-#include "physics/SimulationScreen.hpp"
+#include "physics/settings.hpp"
 
 void GridTypeEdit(GridSettings& grid_settings);
 

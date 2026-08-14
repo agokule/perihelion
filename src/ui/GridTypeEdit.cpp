@@ -1,5 +1,4 @@
 #include "ui/GridTypeEdit.hpp"
-#include "physics/SimulationScreen.hpp"
 #include "imgui.h"
 #include "ui/imgui_ui_utils.hpp"
 #include "FontIcons.hpp"
