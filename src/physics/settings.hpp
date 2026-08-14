@@ -1,5 +1,7 @@
 #pragma once
 
+#include "raylib.h"
+
 enum class GridType {
     SpacetimeCurved,
     Flat,
@@ -17,6 +19,8 @@ struct GridSettings {
 
     int spacing_between_slices = 5;
     int space_time_curve_factor = 600;
+
+    Color grid_color = WHITE;
 };
 
 // tunable values that come from adjust.h and may be re-read every frame

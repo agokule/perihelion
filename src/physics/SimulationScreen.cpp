@@ -220,7 +220,8 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
     
     rlBegin(RL_LINES);
 
-    rlColor4ub(255, 255, 255, 200);
+    Color c = settings.grid_color;
+    rlColor4ub(c.r, c.g, c.b, c.a);
 
     for (int horiz = -slices; horiz <= slices; horiz++) {
         int adj_horiz = horiz + horiz_offset;
