@@ -16,10 +16,10 @@
 
 #include "AppState.hpp"
 #include "physics/SimulationScreen.hpp"
-#include "Skybox.hpp"
+#include "viewport/Skybox.hpp"
 #include "ui/ObjectEditor.hpp"
 #include "ui/RightClickMenu.hpp"
-#include "utils.hpp"
+#include "viewport/utils.hpp"
 #include <format>
 #include <iostream>
 #include <optional>
