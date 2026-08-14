@@ -25,6 +25,13 @@ void update_camera(Camera *camera, int mode)
     float cameraPanSpeed = camera_pan_speed * GetFrameTime();
     float cameraOrbitalSpeed = camera_orbital_speed * GetFrameTime();
     
+    if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse && IsKeyDown(KEY_LEFT_SHIFT)) {
+        cameraMoveSpeed /= 3;
+        cameraRotationSpeed /= 3;
+        cameraPanSpeed /= 3;
+        cameraOrbitalSpeed /= 3;
+    }
+
     if (mode == CAMERA_CUSTOM) {}
     else if (mode == CAMERA_ORBITAL)
     {
