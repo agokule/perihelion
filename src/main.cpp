@@ -66,7 +66,7 @@ void handle_right_click_menu_action(
     }
 }
 
-void change_velocity_using_cone(
+bool change_velocity_using_cone(
         const std::optional<Cone>& velocity_cone,
         const Camera3D& camera,
         bool& changing_velocity_of_obj,
@@ -112,11 +112,9 @@ void change_velocity_using_cone(
             double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
             selected.velocity = pos_local.normalize() * magnitude;
         }
-    } else {
-        changing_velocity_of_obj = false;
-        temp_state = std::nullopt;
-        changing_velocity_of_obj = 0.0f;
-    }
+        return true;
+    } else
+        return false;
 }
 
 int main(int argc, char* argv[]) {
@@ -179,6 +177,18 @@ int main(int argc, char* argv[]) {
         auto velocity_radius_length = selected.velocity.normalize() * selected.radius * settings.objects_scale;
         auto start = selected.position + velocity_radius_length;
         return start;
+    };
+
+    auto stop_changing_velocity = [&changing_velocity_of_obj, &temp_state, &changing_velocity_offset]() {
+        changing_velocity_of_obj = false;
+        temp_state = std::nullopt;
+        changing_velocity_offset = 0.0f;
+    };
+
+    auto stop_adding_object = [&simulation, &adding_object, &temp_state]() {
+        simulation.add_object(*adding_object);
+        temp_state = std::nullopt;
+        adding_object = std::nullopt;
     };
 
     static const ImWchar icon_ranges[] = {
@@ -306,13 +316,12 @@ int main(int argc, char* argv[]) {
                             Vector2Distance(cone_base_pos, mouse_pos) < 9;
 
                         if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && is_mouse_on_cone)) {
-                            change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_offset);
+                            bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_offset);
+                            if (should_stop)
+                                stop_changing_velocity();
                         }
-                        if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
-                            changing_velocity_of_obj = false;
-                            temp_state = std::nullopt;
-                            changing_velocity_offset = 0.0f;
-                        }
+                        if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
+                            stop_changing_velocity();
                     }
 
                     if (IsKeyPressed(KEY_Z))
@@ -321,7 +330,7 @@ int main(int argc, char* argv[]) {
                         metrics_shown = !metrics_shown;
                 }
                 if ((!velocity_cone || simulation.current_selected_object == -1) && changing_velocity_of_obj)
-                    changing_velocity_of_obj = false;
+                    stop_changing_velocity();
 
                 if (simulation.current_selected_object != -1)
                     ObjectEditor(simulation.current_selected_object, simulation.get_object(simulation.current_selected_object), simulation.get_objects());
@@ -353,10 +362,8 @@ int main(int argc, char* argv[]) {
                 camera_pan_enabled = false;
             }
 
-            if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj) {
-                changing_velocity_of_obj = false;
-                temp_state = std::nullopt;
-            }
+            if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
+                stop_changing_velocity();
 
             if (adding_object || changing_velocity_of_obj) {
                 float* to_change = nullptr;
@@ -378,11 +385,8 @@ int main(int argc, char* argv[]) {
             if (IsKeyPressed(KEY_K))
                 settings.paused = !settings.paused;
 
-            if (adding_object && IsKeyPressed(KEY_ENTER)) {
-                simulation.add_object(*adding_object);
-                temp_state = std::nullopt;
-                adding_object = std::nullopt;
-            }
+            if (adding_object && IsKeyPressed(KEY_ENTER))
+                stop_adding_object();
         }
 
         EndDrawing();
