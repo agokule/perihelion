@@ -112,9 +112,9 @@ bool change_velocity_using_cone(
             double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
             selected.velocity = pos_local.normalize() * magnitude;
         }
-        return true;
-    } else
         return false;
+    } else
+        return true;
 }
 
 int main(int argc, char* argv[]) {
