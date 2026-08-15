@@ -330,10 +330,14 @@ int main(int argc, char* argv[]) {
                 changing_velocity_of_obj = false;
 
             if (adding_object) {
+                float multiplier = 6;
+                if (IsKeyDown(KEY_LEFT_SHIFT))
+                    multiplier = 2;
+
                 if (IsKeyDown(KEY_UP))
-                    temp_state->grid.flat_grid_y += 2 * GetFrameTime();
+                    temp_state->grid.flat_grid_y += multiplier * GetFrameTime();
                 else if (IsKeyDown(KEY_DOWN))
-                    temp_state->grid.flat_grid_y -= 2 * GetFrameTime();
+                    temp_state->grid.flat_grid_y -= multiplier * GetFrameTime();
             }
 
             if (IsKeyPressed(KEY_K))
