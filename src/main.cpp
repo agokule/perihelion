@@ -1,6 +1,7 @@
 #include "FontIcons.hpp"
 #include "physics/Object.hpp"
 #include "Vector3Double.hpp"
+#include "physics/settings.hpp"
 #include "raylib.h"
 #include "adjust.h"
 #include "imgui.h"
@@ -70,50 +71,52 @@ void change_velocity_using_cone(
         const Camera3D& camera,
         bool& changing_velocity_of_obj,
         SimulationScreen& simulation,
-        const SimulationSettings& settings
+        const SimulationSettings& settings,
+        std::optional<SimulationSettings>& temp_state,
+        float& changing_velocity_offset
 ) {
-    auto mouse_pos = GetMousePosition();
-    auto cone_tip_pos = GetWorldToScreen(velocity_cone->tip.to_vector3(), camera);
-    auto cone_base_pos = GetWorldToScreen(velocity_cone->base.to_vector3(), camera);
+    changing_velocity_of_obj = true;
+    auto& selected = simulation.get_object(simulation.current_selected_object);
 
-    float cone_screen_height = Vector2Length(cone_tip_pos - cone_base_pos);
-
-    bool is_mouse_on_cone =
-        Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
-        Vector2Distance(cone_base_pos, mouse_pos) < 9;
-
-    if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && is_mouse_on_cone)) {
-        changing_velocity_of_obj = true;
-
-        auto& selected = simulation.get_object(simulation.current_selected_object);
-
-        // using camera_offset_from_selected instead of the real camera
-        // because the real camera loses decimal points of precision when
-        // far away from the origin (see camera_offset_from_selected's comment).
-        Camera3D local_camera = camera;
-        local_camera.position = simulation.camera_offset_from_selected().to_vector3();
-        local_camera.target = Vector3Zero();
-
-        Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
-        auto pos = ray_y_plane_intersection(ray, 0.0f);
-
-        if (pos) {
-            // The rendered tip is surface_radius further out than
-            // `velocity` alone would put it, so invert that full
-            // equation
-            Vector3Double pos_local {*pos};
-            double dist_from_center = pos_local.length();
-            double surface_radius = selected.radius * settings.objects_scale;
-
-            if (dist_from_center > surface_radius) {
-                double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
-                selected.velocity = pos_local.normalize() * magnitude;
-            }
-        } else
-            changing_velocity_of_obj = false;
+    if (!temp_state) {
+        temp_state = settings;
+        temp_state->grid = {
+            .flat_grid_slices = 100,
+            .flat_grid_y = static_cast<float>(selected.position.y + selected.velocity.y),
+            .type = GridType::Flat,
+            .spacing_between_slices = 1,
+            .grid_color = ORANGE,
+        };
     }
-    if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
+
+    // using camera_offset_from_selected instead of the real camera
+    // because the real camera loses decimal points of precision when
+    // far away from the origin (see camera_offset_from_selected's comment).
+    Camera3D local_camera = camera;
+    local_camera.position = simulation.camera_offset_from_selected().to_vector3();
+    local_camera.target = Vector3Zero();
+
+    auto mouse_pos = GetMousePosition();
+    Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
+    auto pos = ray_y_plane_intersection(ray, changing_velocity_offset);
+
+    if (pos) {
+        // The rendered tip is surface_radius further out than
+        // `velocity` alone would put it, so invert that full
+        // equation
+        Vector3Double pos_local {*pos};
+        double dist_from_center = pos_local.length();
+        double surface_radius = selected.radius * settings.objects_scale;
+
+        if (dist_from_center > surface_radius) {
+            double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
+            selected.velocity = pos_local.normalize() * magnitude;
+        }
+    } else {
         changing_velocity_of_obj = false;
+        temp_state = std::nullopt;
+        changing_velocity_of_obj = 0.0f;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -151,6 +154,7 @@ int main(int argc, char* argv[]) {
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
     bool changing_velocity_of_obj = false;
+    float changing_velocity_offset = 0.0f;
     GridSettings grid_settings {};
 
     bool demo_shown = false;
@@ -228,6 +232,11 @@ int main(int argc, char* argv[]) {
                     adding_object->draw(get_settings_state().objects_scale);
                     adding_object->draw_trail();
                 }
+                if (changing_velocity_of_obj) {
+                    const Object& selected = simulation.get_object(simulation.current_selected_object);
+                    temp_state->grid.flat_grid_y = selected.position.y + changing_velocity_offset;
+                }
+
                 if (simulation.current_selected_object != -1) {
                     // drawing the velocity vector of the current object
                     const auto& selected = simulation.get_object(simulation.current_selected_object);
@@ -272,7 +281,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 auto selection = simulation.draw_object_selection_ui(camera, settings);
-                if (selection && !adding_object)
+                if (selection && !adding_object && !changing_velocity_of_obj)
                     simulation.select_object(*selection, settings);
                 
                 if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
@@ -285,7 +294,25 @@ int main(int argc, char* argv[]) {
                         (is_object_in_camera(velocity_cone->base.to_vector3(), camera) ||
                         is_object_in_camera(velocity_cone->tip.to_vector3(), camera))
                     ) {
-                        change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings);
+                        // velocity cone is visible on screen
+                        auto mouse_pos = GetMousePosition();
+                        auto cone_tip_pos = GetWorldToScreen(velocity_cone->tip.to_vector3(), camera);
+                        auto cone_base_pos = GetWorldToScreen(velocity_cone->base.to_vector3(), camera);
+
+                        float cone_screen_height = Vector2Length(cone_tip_pos - cone_base_pos);
+
+                        bool is_mouse_on_cone =
+                            Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
+                            Vector2Distance(cone_base_pos, mouse_pos) < 9;
+
+                        if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && is_mouse_on_cone)) {
+                            change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_offset);
+                        }
+                        if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
+                            changing_velocity_of_obj = false;
+                            temp_state = std::nullopt;
+                            changing_velocity_offset = 0.0f;
+                        }
                     }
 
                     if (IsKeyPressed(KEY_Z))
@@ -326,18 +353,26 @@ int main(int argc, char* argv[]) {
                 camera_pan_enabled = false;
             }
 
-            if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
+            if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj) {
                 changing_velocity_of_obj = false;
+                temp_state = std::nullopt;
+            }
 
-            if (adding_object) {
+            if (adding_object || changing_velocity_of_obj) {
+                float* to_change = nullptr;
+                if (adding_object)
+                    to_change = &temp_state->grid.flat_grid_y;
+                else if (changing_velocity_of_obj)
+                    to_change = &changing_velocity_offset;
+
                 float multiplier = 6;
                 if (IsKeyDown(KEY_LEFT_SHIFT))
                     multiplier = 2;
 
                 if (IsKeyDown(KEY_UP))
-                    temp_state->grid.flat_grid_y += multiplier * GetFrameTime();
+                    *to_change += multiplier * GetFrameTime();
                 else if (IsKeyDown(KEY_DOWN))
-                    temp_state->grid.flat_grid_y -= multiplier * GetFrameTime();
+                    *to_change -= multiplier * GetFrameTime();
             }
 
             if (IsKeyPressed(KEY_K))
