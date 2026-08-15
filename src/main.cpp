@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
 
                 if (adding_object) {
                     Ray ray = GetScreenToWorldRay(GetMousePosition(), camera);
-                    auto pos = ray_y_plane_intersection(ray);
+                    auto pos = ray_y_plane_intersection(ray, temp_state->grid.flat_grid_y);
                     if (!pos.has_value())
                         pos = ray.position + ray.direction * 15;
                     adding_object->position = *pos;
@@ -328,6 +328,13 @@ int main(int argc, char* argv[]) {
 
             if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
                 changing_velocity_of_obj = false;
+
+            if (adding_object) {
+                if (IsKeyDown(KEY_UP))
+                    temp_state->grid.flat_grid_y += 2 * GetFrameTime();
+                else if (IsKeyDown(KEY_DOWN))
+                    temp_state->grid.flat_grid_y -= 2 * GetFrameTime();
+            }
 
             if (IsKeyPressed(KEY_K))
                 settings.paused = !settings.paused;
