@@ -1,4 +1,5 @@
 build/
+build-web/
 .cache/
 
 # Claude Code local state & credentials

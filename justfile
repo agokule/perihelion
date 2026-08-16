@@ -9,8 +9,8 @@ build type='Debug':
 # Build the app as a website with either Release or Debug mode
 [arg('type', pattern='(?i)Release|Debug')]
 build-web type='Debug':
-    emcmake cmake -DCMAKE_BUILD_TYPE={{type}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build
-    cmake --build build --config {{type}} -- -j
+    emcmake cmake -DCMAKE_BUILD_TYPE={{type}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build-web
+    cmake --build build-web --config {{type}} -- -j
 
 
 recurse_delete := if os_family() == "windows" { "Remove-Item -Recurse -Force" } else { "rm -rf " }
@@ -18,8 +18,9 @@ recurse_delete := if os_family() == "windows" { "Remove-Item -Recurse -Force" } 
 # Delete the build folder
 clean:
     {{ recurse_delete }} ./build/
+    {{ recurse_delete }} ./build-web/
 
-[working-directory: 'build/']
+[working-directory: 'build-web/']
 web-server:
     python -m http.server
 
