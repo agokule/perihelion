@@ -30,6 +30,22 @@ enum class Axis {
     X, Y, Z
 };
 
+struct AxisChangeInfo {
+    Axis axis;
+
+    float horizontal_speed;
+    float vertical_speed;
+
+    Vector2 original_mouse_pos;
+
+    // This is the object-relative offset the arrow tip had when the
+    // axis lock engaged (same frame as the non-locked branch below), not
+    // the object's absolute world position -- otherwise the two
+    // non-edited axes carry light-seconds-scale world coordinates into
+    // the pos_local/normalize() math below and the velocity flies off.
+    Vector3 original_pos;
+};
+
 std::optional<Axis> get_axis_from_key(KeyboardKey key) {
     switch (key) {
         case KEY_X:
@@ -83,6 +99,17 @@ void handle_right_click_menu_action(
     }
 }
 
+// Inverse of the pos_local -> velocity mapping in change_velocity_using_cone:
+// gives the current velocity arrow's tip, relative to the selected object,
+// in the same object-relative frame that the non-axis-locked drag uses.
+Vector3Double velocity_arrow_local_offset(const Object& selected, const SimulationSettings& settings) {
+    double surface_radius = selected.radius * settings.objects_scale;
+    double speed = selected.velocity.length();
+    if (speed == 0.0)
+        return Vector3Double{surface_radius, 0.0, 0.0};
+    return selected.velocity.normalize() * (speed * settings.velocity_arrow_scale + surface_radius);
+}
+
 bool change_velocity_using_cone(
         const std::optional<Cone>& velocity_cone,
         const Camera3D& camera,
@@ -90,7 +117,7 @@ bool change_velocity_using_cone(
         SimulationScreen& simulation,
         const SimulationSettings& settings,
         std::optional<SimulationSettings>& temp_state,
-        std::optional<Axis> axis_lock
+        const std::optional<AxisChangeInfo>& axis_lock
 ) {
     changing_velocity_of_obj = true;
     auto& selected = simulation.get_object(simulation.current_selected_object);
@@ -106,16 +133,43 @@ bool change_velocity_using_cone(
         };
     }
 
-    // using camera_offset_from_selected instead of the real camera
-    // because the real camera loses decimal points of precision when
-    // far away from the origin (see camera_offset_from_selected's comment).
-    Camera3D local_camera = camera;
-    local_camera.position = simulation.camera_offset_from_selected().to_vector3();
-    local_camera.target = Vector3Zero();
-
+    std::optional<Vector3> pos = std::nullopt;
     auto mouse_pos = GetMousePosition();
-    Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
-    auto pos = ray_y_plane_intersection(ray, 0.0f);
+
+    if (!axis_lock) {
+        // using camera_offset_from_selected instead of the real camera
+        // because the real camera loses decimal points of precision when
+        // far away from the origin (see camera_offset_from_selected's comment).
+        Camera3D local_camera = camera;
+        local_camera.position = simulation.camera_offset_from_selected().to_vector3();
+        local_camera.target = Vector3Zero();
+
+        Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
+        pos = ray_y_plane_intersection(ray, 0.0f);
+    } else {
+        pos = axis_lock->original_pos;
+
+        float* to_edit = nullptr;
+        const float* original = nullptr;
+        switch (axis_lock->axis) {
+            case Axis::X:
+                to_edit = &pos->x;
+                original = &axis_lock->original_pos.x;
+                break;
+            case Axis::Y:
+                to_edit = &pos->y;
+                original = &axis_lock->original_pos.y;
+                break;
+            case Axis::Z:
+                to_edit = &pos->z;
+                original = &axis_lock->original_pos.z;
+                break;
+        }
+
+        auto mouse_change = mouse_pos - axis_lock->original_mouse_pos;
+        float change_along_axis = mouse_change.x * axis_lock->horizontal_speed + mouse_change.y * axis_lock->vertical_speed;
+        *to_edit = *original + change_along_axis * settings.selected_sensitivity;
+    }
 
     if (pos) {
         // The rendered tip is surface_radius further out than
@@ -169,7 +223,7 @@ int main(int argc, char* argv[]) {
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
     bool changing_velocity_of_obj = false;
-    std::optional<Axis> changing_velocity_axis = std::nullopt;
+    std::optional<AxisChangeInfo> changing_velocity_axis_info = std::nullopt;
     GridSettings grid_settings {};
 
     bool demo_shown = false;
@@ -196,10 +250,10 @@ int main(int argc, char* argv[]) {
         return start;
     };
 
-    auto stop_changing_velocity = [&changing_velocity_of_obj, &temp_state, &changing_velocity_axis]() {
+    auto stop_changing_velocity = [&changing_velocity_of_obj, &temp_state, &changing_velocity_axis_info]() {
         changing_velocity_of_obj = false;
         temp_state = std::nullopt;
-        changing_velocity_axis = std::nullopt;
+        changing_velocity_axis_info = std::nullopt;
     };
 
     auto stop_adding_object = [&simulation, &adding_object, &temp_state]() {
@@ -332,23 +386,42 @@ int main(int argc, char* argv[]) {
                             Vector2Distance(cone_base_pos, mouse_pos) < 9;
 
                         if (changing_velocity_of_obj || (IsKeyPressed(KEY_V))) {
-                            bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_axis);
+                            bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_axis_info);
                             if (should_stop)
                                 stop_changing_velocity();
                         }
 
-                        if (changing_velocity_of_obj)
-                            changing_velocity_axis = get_axis_from_key((KeyboardKey)GetKeyPressed());
+                        if (changing_velocity_of_obj) {
+                            std::optional<Axis> changing_velocity_axis = get_axis_from_key((KeyboardKey)GetKeyPressed());
+                            if (changing_velocity_axis) {
+                                temp_state->paused = true;
+                                const auto& selected = simulation.get_object(simulation.current_selected_object);
 
-                        if (changing_velocity_axis) {
-                            // TODO: implement this
-                            switch (*changing_velocity_axis) {
-                                case Axis::X:
-                                    break;
-                                case Axis::Y:
-                                    break;
-                                case Axis::Z:
-                                    break;
+                                Vector3Double original_pos = selected.position;
+                                Vector2 original_pos_screen = GetWorldToScreen(original_pos.to_vector3(), camera);
+
+                                Vector3Double test_pos = original_pos;
+                                switch (*changing_velocity_axis) {
+                                    case Axis::X:
+                                        test_pos.x += 1;
+                                        break;
+                                    case Axis::Y:
+                                        test_pos.y += 1;
+                                        break;
+                                    case Axis::Z:
+                                        test_pos.z += 1;
+                                        break;
+                                }
+                                Vector2 test_pos_screen = GetWorldToScreen(test_pos.to_vector3(), camera);
+
+                                Vector2 ray = Vector2Normalize(test_pos_screen - original_pos_screen);
+                                changing_velocity_axis_info = AxisChangeInfo {
+                                    .axis = *changing_velocity_axis,
+                                    .horizontal_speed = ray.x,
+                                    .vertical_speed = ray.y,
+                                    .original_mouse_pos = GetMousePosition(),
+                                    .original_pos = velocity_arrow_local_offset(selected, settings).to_vector3()
+                                };
                             }
                         }
                     }
