@@ -26,6 +26,23 @@
 #include <iostream>
 #include <optional>
 
+enum class Axis {
+    X, Y, Z
+};
+
+std::optional<Axis> get_axis_from_key(KeyboardKey key) {
+    switch (key) {
+        case KEY_X:
+            return Axis::X;
+        case KEY_Z:
+            return Axis::Z;
+        case KEY_Y:
+            return Axis::Y;
+        default:
+            return std::nullopt;
+    }
+};
+
 void handle_right_click_menu_action(
     std::optional<RightClickActionSelected> action,
     const Camera& camera,
@@ -73,7 +90,7 @@ bool change_velocity_using_cone(
         SimulationScreen& simulation,
         const SimulationSettings& settings,
         std::optional<SimulationSettings>& temp_state,
-        float& changing_velocity_offset
+        std::optional<Axis> axis_lock
 ) {
     changing_velocity_of_obj = true;
     auto& selected = simulation.get_object(simulation.current_selected_object);
@@ -98,7 +115,7 @@ bool change_velocity_using_cone(
 
     auto mouse_pos = GetMousePosition();
     Ray ray = GetScreenToWorldRay(mouse_pos, local_camera);
-    auto pos = ray_y_plane_intersection(ray, changing_velocity_offset);
+    auto pos = ray_y_plane_intersection(ray, 0.0f);
 
     if (pos) {
         // The rendered tip is surface_radius further out than
@@ -152,7 +169,7 @@ int main(int argc, char* argv[]) {
     std::optional<Object> adding_object = std::nullopt;
     std::optional<Cone> velocity_cone = std::nullopt;
     bool changing_velocity_of_obj = false;
-    float changing_velocity_offset = 0.0f;
+    std::optional<Axis> changing_velocity_axis = std::nullopt;
     GridSettings grid_settings {};
 
     bool demo_shown = false;
@@ -179,10 +196,10 @@ int main(int argc, char* argv[]) {
         return start;
     };
 
-    auto stop_changing_velocity = [&changing_velocity_of_obj, &temp_state, &changing_velocity_offset]() {
+    auto stop_changing_velocity = [&changing_velocity_of_obj, &temp_state, &changing_velocity_axis]() {
         changing_velocity_of_obj = false;
         temp_state = std::nullopt;
-        changing_velocity_offset = 0.0f;
+        changing_velocity_axis = std::nullopt;
     };
 
     auto stop_adding_object = [&simulation, &adding_object, &temp_state]() {
@@ -243,10 +260,6 @@ int main(int argc, char* argv[]) {
                     adding_object->position = *pos;
                     adding_object->draw(get_settings_state().objects_scale);
                     adding_object->draw_trail();
-                }
-                if (changing_velocity_of_obj) {
-                    const Object& selected = simulation.get_object(simulation.current_selected_object);
-                    temp_state->grid.flat_grid_y = selected.position.y + changing_velocity_offset;
                 }
 
                 if (simulation.current_selected_object != -1) {
@@ -318,9 +331,24 @@ int main(int argc, char* argv[]) {
                             Vector2Distance(cone_base_pos, mouse_pos) < 9;
 
                         if (changing_velocity_of_obj || (IsKeyPressed(KEY_V))) {
-                            bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_offset);
+                            bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_axis);
                             if (should_stop)
                                 stop_changing_velocity();
+                        }
+
+                        if (changing_velocity_of_obj)
+                            changing_velocity_axis = get_axis_from_key((KeyboardKey)GetKeyPressed());
+
+                        if (changing_velocity_axis) {
+                            // TODO: implement this
+                            switch (*changing_velocity_axis) {
+                                case Axis::X:
+                                    break;
+                                case Axis::Y:
+                                    break;
+                                case Axis::Z:
+                                    break;
+                            }
                         }
                     }
 
@@ -365,12 +393,10 @@ int main(int argc, char* argv[]) {
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
                 stop_changing_velocity();
 
-            if (adding_object || changing_velocity_of_obj) {
+            if (adding_object) {
                 float* to_change = nullptr;
                 if (adding_object)
                     to_change = &temp_state->grid.flat_grid_y;
-                else if (changing_velocity_of_obj)
-                    to_change = &changing_velocity_offset;
 
                 float multiplier = 6;
                 if (IsKeyDown(KEY_LEFT_SHIFT))
