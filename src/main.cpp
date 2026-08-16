@@ -317,7 +317,8 @@ int main(int argc, char* argv[]) {
                     }
                     if (velocity_cone &&
                         (is_object_in_camera(velocity_cone->base.to_vector3(), camera) ||
-                        is_object_in_camera(velocity_cone->tip.to_vector3(), camera))
+                        is_object_in_camera(velocity_cone->tip.to_vector3(), camera)) &&
+                        !camera_pan_enabled
                     ) {
                         // velocity cone is visible on screen
                         auto mouse_pos = GetMousePosition();
