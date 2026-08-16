@@ -99,17 +99,6 @@ void handle_right_click_menu_action(
     }
 }
 
-// Inverse of the pos_local -> velocity mapping in change_velocity_using_cone:
-// gives the current velocity arrow's tip, relative to the selected object,
-// in the same object-relative frame that the non-axis-locked drag uses.
-Vector3Double velocity_arrow_local_offset(const Object& selected, const SimulationSettings& settings) {
-    double surface_radius = selected.radius * settings.objects_scale;
-    double speed = selected.velocity.length();
-    if (speed == 0.0)
-        return Vector3Double{surface_radius, 0.0, 0.0};
-    return selected.velocity.normalize() * (speed * settings.velocity_arrow_scale + surface_radius);
-}
-
 bool change_velocity_using_cone(
         const std::optional<Cone>& velocity_cone,
         const Camera3D& camera,
@@ -172,17 +161,10 @@ bool change_velocity_using_cone(
     }
 
     if (pos) {
-        // The rendered tip is surface_radius further out than
-        // `velocity` alone would put it, so invert that full
-        // equation
-        Vector3Double pos_local {*pos};
-        double dist_from_center = pos_local.length();
         double surface_radius = selected.radius * settings.objects_scale;
-
-        if (dist_from_center > surface_radius) {
-            double magnitude = (dist_from_center - surface_radius) / settings.velocity_arrow_scale;
-            selected.velocity = pos_local.normalize() * magnitude;
-        }
+        auto velocity = arrow_offset_to_velocity(Vector3Double{*pos}, surface_radius, settings.velocity_arrow_scale);
+        if (velocity)
+            selected.velocity = *velocity;
         return false;
     } else
         return true;
@@ -321,7 +303,7 @@ int main(int argc, char* argv[]) {
                     const auto& selected = simulation.get_object(simulation.current_selected_object);
 
                     auto start = calculate_starting_point_of_velocity_line(selected, get_settings_state());
-                    auto end = start + selected.velocity * get_settings_state().velocity_arrow_scale;
+                    auto end = selected.position + velocity_to_arrow_offset(selected.velocity, selected.radius * get_settings_state().objects_scale, get_settings_state().velocity_arrow_scale);
 
                     auto cone_height = selected.radius * get_settings_state().objects_scale / 20;
 
@@ -420,7 +402,7 @@ int main(int argc, char* argv[]) {
                                     .horizontal_speed = ray.x,
                                     .vertical_speed = ray.y,
                                     .original_mouse_pos = GetMousePosition(),
-                                    .original_pos = velocity_arrow_local_offset(selected, settings).to_vector3()
+                                    .original_pos = velocity_to_arrow_offset(selected.velocity, selected.radius * settings.objects_scale, settings.velocity_arrow_scale).to_vector3()
                                 };
                             }
                         }

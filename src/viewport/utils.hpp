@@ -21,3 +21,14 @@ struct Cone {
 
 std::optional<Cone> draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height);
 
+// The velocity arrow's tip, relative to the object it belongs to: offset
+// out to the object's surface in the velocity's direction, then further out
+// by velocity * velocity_arrow_scale. This is also the object-relative
+// frame used to interactively drag the arrow (see main.cpp).
+Vector3Double velocity_to_arrow_offset(Vector3Double velocity, double surface_radius, double velocity_arrow_scale);
+
+// Inverse of velocity_to_arrow_offset: recovers the velocity that a given
+// arrow-tip offset (relative to the object) represents. nullopt if the
+// offset is at or inside the object's own surface, i.e. not a valid drag.
+std::optional<Vector3Double> arrow_offset_to_velocity(Vector3Double offset, double surface_radius, double velocity_arrow_scale);
+

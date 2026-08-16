@@ -101,3 +101,19 @@ std::optional<Cone> draw_3d_arrow(Vector3Double start, Vector3Double end, double
     };
 }
 
+Vector3Double velocity_to_arrow_offset(Vector3Double velocity, double surface_radius, double velocity_arrow_scale) {
+    double speed = velocity.length();
+    if (speed == 0.0)
+        return Vector3Double{surface_radius, 0.0, 0.0};
+    return velocity.normalize() * (speed * velocity_arrow_scale + surface_radius);
+}
+
+std::optional<Vector3Double> arrow_offset_to_velocity(Vector3Double offset, double surface_radius, double velocity_arrow_scale) {
+    double dist_from_center = offset.length();
+    if (dist_from_center <= surface_radius)
+        return std::nullopt;
+
+    double magnitude = (dist_from_center - surface_radius) / velocity_arrow_scale;
+    return offset.normalize() * magnitude;
+}
+
