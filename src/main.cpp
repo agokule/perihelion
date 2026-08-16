@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
                             Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
                             Vector2Distance(cone_base_pos, mouse_pos) < 9;
 
-                        if (changing_velocity_of_obj || (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && is_mouse_on_cone)) {
+                        if (changing_velocity_of_obj || (IsKeyPressed(KEY_V))) {
                             bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_offset);
                             if (should_stop)
                                 stop_changing_velocity();
@@ -360,7 +360,7 @@ int main(int argc, char* argv[]) {
                 camera_pan_enabled = false;
             }
 
-            if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && changing_velocity_of_obj)
                 stop_changing_velocity();
 
             if (adding_object || changing_velocity_of_obj) {
