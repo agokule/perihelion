@@ -320,8 +320,6 @@ int main(int argc, char* argv[]) {
                             if (should_stop)
                                 stop_changing_velocity();
                         }
-                        if (changing_velocity_of_obj && IsMouseButtonUp(MOUSE_BUTTON_LEFT))
-                            stop_changing_velocity();
                     }
 
                     if (IsKeyPressed(KEY_Z))
