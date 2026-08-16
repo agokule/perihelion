@@ -324,9 +324,9 @@ int main(int argc, char* argv[]) {
                         }
                     }
 
-                    if (IsKeyPressed(KEY_Z))
+                    if (IsKeyPressed(KEY_P))
                         demo_shown = !demo_shown;
-                    if (IsKeyPressed(KEY_X))
+                    if (IsKeyPressed(KEY_O))
                         metrics_shown = !metrics_shown;
                 }
                 if ((!velocity_cone || simulation.current_selected_object == -1) && changing_velocity_of_obj)
