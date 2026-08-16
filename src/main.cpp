@@ -191,6 +191,8 @@ int main(int argc, char* argv[]) {
         adding_object = std::nullopt;
     };
 
+    auto imgui_wants_io = []() { return ImGui::GetIO().WantCaptureKeyboard || ImGui::GetIO().WantCaptureMouse; };
+
     static const ImWchar icon_ranges[] = {
         0xF0000, 0xF0FFF, 
         0
@@ -294,7 +296,7 @@ int main(int argc, char* argv[]) {
                 if (selection && !adding_object && !changing_velocity_of_obj)
                     simulation.select_object(*selection, settings);
                 
-                if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
+                if (!imgui_wants_io()) {
                     if (!IsCursorHidden() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !adding_object) {
                         simulation.select_object({-1, 0}, settings);
                         right_click_location = GetMousePosition();
@@ -347,7 +349,7 @@ int main(int argc, char* argv[]) {
                 break;
         }
 
-        if (!ImGui::GetIO().WantCaptureKeyboard && !ImGui::GetIO().WantCaptureMouse) {
+        if (!imgui_wants_io()) {
             if (adjust_live || IsKeyPressed(KEY_R))
                 adjust_update();
 
