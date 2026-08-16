@@ -25,6 +25,7 @@
 #include <format>
 #include <iostream>
 #include <optional>
+#include <utility>
 
 enum class Axis {
     X, Y, Z
@@ -45,6 +46,15 @@ struct AxisChangeInfo {
     // the pos_local/normalize() math below and the velocity flies off.
     Vector3 original_pos;
 };
+
+Vector3Double axis_unit_vector(Axis axis) {
+    switch (axis) {
+        case Axis::X: return Vector3Double{1.0, 0.0, 0.0};
+        case Axis::Y: return Vector3Double{0.0, 1.0, 0.0};
+        case Axis::Z: return Vector3Double{0.0, 0.0, 1.0};
+    }
+    std::unreachable();
+}
 
 std::optional<Axis> get_axis_from_key(KeyboardKey key) {
     switch (key) {
@@ -156,8 +166,11 @@ bool change_velocity_using_cone(
         }
 
         auto mouse_change = mouse_pos - axis_lock->original_mouse_pos;
+        // horizontal_speed/vertical_speed already carry the pixels-per-world-unit
+        // scale (see capture site below), so this dot product yields world
+        // units directly -- no separate sensitivity constant needed.
         float change_along_axis = mouse_change.x * axis_lock->horizontal_speed + mouse_change.y * axis_lock->vertical_speed;
-        *to_edit = *original + change_along_axis * settings.selected_sensitivity;
+        *to_edit = *original + change_along_axis;
     }
 
     if (pos) {
@@ -308,6 +321,29 @@ int main(int argc, char* argv[]) {
                     auto cone_height = selected.radius * get_settings_state().objects_scale / 20;
 
                     velocity_cone = draw_3d_arrow(start, end, cone_height);
+
+                    if (changing_velocity_axis_info) {
+                        // Draw a guide line through the arrow's tip along the
+                        // locked axis so it's clear which axis the velocity
+                        // drag is currently constrained to. Sized relative to
+                        // the camera's distance from the tip (just far enough
+                        // to fill the view) rather than a large fixed
+                        // constant -- DrawLine3D takes float endpoints, and
+                        // adding a huge offset to `end` before the
+                        // double->float cast destroys the precision of the
+                        // (much smaller) tip position, so the line visibly
+                        // wobbles as it rounds to different nearby floats
+                        // each frame. Same class of issue
+                        // camera_offset_from_selected works around for the
+                        // mouse-ray math above.
+                        Vector3Double axis_dir = axis_unit_vector(changing_velocity_axis_info->axis);
+                        double guide_line_extent = Vector3Double{camera.position}.distance(end) * 4.0 + 1.0;
+                        DrawLine3D(
+                            (end - axis_dir * guide_line_extent).to_vector3(),
+                            (end + axis_dir * guide_line_extent).to_vector3(),
+                            SKYBLUE
+                        );
+                    }
                 }
 
                 EndMode3D();
@@ -382,25 +418,26 @@ int main(int argc, char* argv[]) {
                                 Vector3Double original_pos = selected.position;
                                 Vector2 original_pos_screen = GetWorldToScreen(original_pos.to_vector3(), camera);
 
-                                Vector3Double test_pos = original_pos;
-                                switch (*changing_velocity_axis) {
-                                    case Axis::X:
-                                        test_pos.x += 1;
-                                        break;
-                                    case Axis::Y:
-                                        test_pos.y += 1;
-                                        break;
-                                    case Axis::Z:
-                                        test_pos.z += 1;
-                                        break;
-                                }
+                                Vector3Double test_pos = original_pos + axis_unit_vector(*changing_velocity_axis);
                                 Vector2 test_pos_screen = GetWorldToScreen(test_pos.to_vector3(), camera);
 
-                                Vector2 ray = Vector2Normalize(test_pos_screen - original_pos_screen);
+                                // Raw (non-normalized) screen delta for a 1 world-unit
+                                // step along the axis -- its length is how many screen
+                                // pixels correspond to 1 world unit at the current zoom.
+                                // Dividing by its squared length (instead of just
+                                // normalizing) bakes that scale into the projection
+                                // below, so dragging tracks the mouse consistently
+                                // whether zoomed in or far out.
+                                Vector2 screen_delta = test_pos_screen - original_pos_screen;
+                                float pixels_per_unit_sqr = Vector2LengthSqr(screen_delta);
+                                Vector2 speed = pixels_per_unit_sqr > 1e-6f
+                                    ? screen_delta / pixels_per_unit_sqr
+                                    : Vector2Zero();
+
                                 changing_velocity_axis_info = AxisChangeInfo {
                                     .axis = *changing_velocity_axis,
-                                    .horizontal_speed = ray.x,
-                                    .vertical_speed = ray.y,
+                                    .horizontal_speed = speed.x,
+                                    .vertical_speed = speed.y,
                                     .original_mouse_pos = GetMousePosition(),
                                     .original_pos = velocity_to_arrow_offset(selected.velocity, selected.radius * settings.objects_scale, settings.velocity_arrow_scale).to_vector3()
                                 };
