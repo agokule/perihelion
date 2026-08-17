@@ -13,7 +13,7 @@ double Vector3Double::lengthSqr() const {
 }
 
 double Vector3Double::length() const {
-    return sqrtf(lengthSqr());
+    return std::sqrt(lengthSqr());
 }
 
 Vector3Double Vector3Double::normalize() const {
