@@ -52,6 +52,17 @@ struct RAIIStyleVar {
     }
 };
 
+struct RAIIID {
+    template<typename T>
+    RAIIID(T id) {
+        ImGui::PushID(id);
+    }
+
+    ~RAIIID() {
+        ImGui::PopID();
+    }
+};
+
 struct AutoPosition {};
 
 // int's represent pixel values,
