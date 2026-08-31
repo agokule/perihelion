@@ -19,7 +19,7 @@ void DragVelocity(Vector3Double& velocity) {
             ImGuiDataType_Double,
             &velocity.x,
             3,
-            0.001,
+            0.0001f,
             &min_velocity,
             &max_velocity,
             "%le c",
@@ -28,13 +28,28 @@ void DragVelocity(Vector3Double& velocity) {
 }
 
 void DragVelocity(Spherical& velocity) {
+    // The spherical form is re-derived from the object's Cartesian velocity every
+    // frame, and that round trip folds colatitude back into [0, pi] and loses both
+    // angles where the direction is degenerate (at a pole, or at zero magnitude).
+    // So hold the edited value for as long as a drag is running, and remember the
+    // pole-crossing parity: after crossing a pole the colatitude is reflected, and
+    // the drag speed has to be negated to keep sweeping the same way in space.
+    // None of this state means anything once no drag is active, so it is reset then.
+    static Spherical held;
+    static bool holding = false;
+    static bool flipped = false;
+
     RAIIID id {"velocity drag polar"};
+
+    Spherical value = holding ? held : velocity;
+    bool active = false;
 
     constexpr int components = 3;
     ImGui::PushMultiItemsWidths(components, ImGui::CalcItemWidth());
 
     // Each drag ends with the PopItemWidth matching one of the widths pushed above.
-    auto end_component = [] {
+    auto end_component = [&] {
+        active |= ImGui::IsItemActive();
         ImGui::PopItemWidth();
         ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
     };
@@ -46,7 +61,7 @@ void DragVelocity(Spherical& velocity) {
         ImGui::DragScalar(
                 "",
                 ImGuiDataType_Double,
-                &velocity.radius,
+                &value.radius,
                 0.0001f,
                 &min,
                 &max,
@@ -63,7 +78,7 @@ void DragVelocity(Spherical& velocity) {
         ImGui::DragScalar(
                 "",
                 ImGuiDataType_Double,
-                &velocity.longitude,
+                &value.longitude,
                 angle_drag_speed,
                 &min,
                 &max,
@@ -74,21 +89,34 @@ void DragVelocity(Spherical& velocity) {
     }
 
     {
+        // Unbounded on purpose: letting the drag run past a pole is what makes the
+        // crossing continuous. It is folded back into [0, pi] below.
         RAIIID colatitude_id {2};
-        double min = 0.0;
-        double max = pi;
         ImGui::DragScalar(
                 "",
                 ImGuiDataType_Double,
-                &velocity.colatitude,
-                angle_drag_speed,
-                &min,
-                &max,
+                &value.colatitude,
+                flipped ? -angle_drag_speed : angle_drag_speed,
+                nullptr,
+                nullptr,
                 "%.3f rad",
-                ImGuiSliderFlags_AlwaysClamp
+                ImGuiSliderFlags_None
         );
         end_component();
     }
 
     ImGui::Text(NF_FA_PERSON_RUNNING " Velocity:");
+
+    if (fold_colatitude(value.colatitude)) {
+        value.longitude += pi;
+        flipped = !flipped;
+    }
+    value.longitude = wrap_angle(value.longitude);
+
+    held = value;
+    holding = active;
+    if (!active)
+        flipped = false;
+
+    velocity = value;
 }
