@@ -2,7 +2,9 @@
 #include "physics/Constants.hpp"
 #include "FontIcons.hpp"
 #include "physics/Object.hpp"
+#include "Spherical.hpp"
 #include "Vector3Double.hpp"
+#include "ui/DragVelocity.hpp"
 #include "ui/ObjectSelectorCombo.hpp"
 #include "ui/imgui_ui_utils.hpp"
 #include <cmath>
@@ -14,6 +16,8 @@ using std::holds_alternative;
 using std::get;
 
 bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs) {
+    static VelocityType velocity_type = VelocityType::Polar;
+
     RAIIWindow win {"Object Editor"};
 
     double max_mass = 1e40;
@@ -21,9 +25,6 @@ bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs) {
 
     double max_radius = 5;
     double min_radius = 0.001;
-
-    double max_velocity = 1;
-    double min_velocity = -1;
 
     ImGui::InputText("Name:", &obj.name);
     ImGui::DragScalar(
@@ -47,17 +48,19 @@ bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs) {
             ImGuiSliderFlags_AlwaysClamp
     );
     ImGui::SeparatorText("Velocity things");
-    ImGui::DragScalarN(
-            NF_FA_PERSON_RUNNING " Velocity:",
-            ImGuiDataType_Double,
-            &obj.velocity.x,
-            3,
-            0.001,
-            &min_velocity,
-            &max_velocity,
-            "%le c",
-            ImGuiSliderFlags_AlwaysClamp
-    );
+
+    ImGui::RadioButton("Cartesian", (int*)&velocity_type, (int)VelocityType::Cartesian);
+    ImGui::SameLine();
+    ImGui::RadioButton("Polar", (int*)&velocity_type, (int)VelocityType::Polar);
+
+    if (velocity_type == VelocityType::Polar) {
+        Spherical velocity_polar = to_spherical(obj.velocity);
+        DragVelocity(velocity_polar);
+        obj.velocity = to_cartesian(velocity_polar);
+    } else {
+        DragVelocity(obj.velocity);
+    }
+
     if (ImGui::Button("Reverse Velocity"))
         obj.velocity = -obj.velocity;
     ImGui::SameLine();
