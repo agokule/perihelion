@@ -60,6 +60,9 @@ bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs) {
     );
     if (ImGui::Button("Reverse Velocity"))
         obj.velocity = -obj.velocity;
+    ImGui::SameLine();
+    if (ImGui::Button("Set Velocity to Zero"))
+        obj.velocity = {0, 0, 0};
 
     static int selected = -1;
     ImGui::Text("Select an object (not this one!): ");
