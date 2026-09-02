@@ -12,6 +12,7 @@
 #include "physics/Constants.hpp"
 #include "physics/Object.hpp"
 #include "Vector3Double.hpp"
+#include "physics/settings.hpp"
 #include "raylib.h"
 #include "ui/ObjectSelector.hpp"
 #include "rlgl.h"
@@ -177,6 +178,17 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
     }
 }
 
+double SimulationScreen::curvature_at(double x, double z, const GridSettings& settings) const {
+    double y = 0;
+    for (const Object& obj: scene.objects) {
+        double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
+        double distance = obj.position.distance({x, 0, z});
+        distance = std::max(distance, r_s); // Flamm's paraboloid is only defined for distance >= r_s
+        y += settings.space_time_curve_factor * sqrt(r_s * (distance - r_s));
+    }
+    return y;
+}
+
 void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& settings) const {
     if (settings.type == GridType::None)
         return;
@@ -190,28 +202,46 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
     if (grid_y_values.size() != grid_dimensions * grid_dimensions)
         grid_y_values.resize(std::pow(grid_dimensions, 2));
 
-    double center_of_mass_y = 0;
-    double total_mass = 0;
-    for (const Object& obj: scene.objects) {
-        if (obj.position.distance(center) > radius)
-            continue;
-        center_of_mass_y += obj.mass * obj.position.y;
-        total_mass += obj.mass;
+    switch (settings.type) {
+        case GridType::Flat:
+            center.y = settings.flat_grid_y;
+            break;
+        case GridType::SpacetimeCurved: {
+            double center_of_mass_y = 0;
+            double total_mass = 0;
+            for (const Object& obj: scene.objects) {
+                center_of_mass_y += obj.mass * obj.position.y;
+                total_mass += obj.mass;
+            }
+            if (total_mass != 0)
+                center_of_mass_y /= total_mass;
+
+            // the paraboloid keeps growing with distance, so its peak over the
+            // grid always sits at whichever corner is furthest from the masses.
+            // Evaluate those four corners directly, at the grid's real (unsnapped)
+            // extent, rather than taking a max over the sample lattice as it's
+            // built: that lattice is floored to the camera (see horiz_offset
+            // below), so the max taken over it stepped every time the camera
+            // crossed a spacing boundary and the whole lattice shifted one cell
+            // over -- which is what made the grid visibly hop up and down
+            double max_y_val = -std::numeric_limits<double>::infinity();
+            for (double corner_x : {center.x - radius, center.x + radius})
+                for (double corner_z : {center.z - radius, center.z + radius})
+                    max_y_val = std::max(max_y_val, curvature_at(corner_x, corner_z, settings));
+
+            // line the peak of the sheet up with the scene's center of mass:
+            // every vertex adds center.y to a curvature in [0, max_y_val], so
+            // this is the shift that puts the highest of them at
+            // center_of_mass_y. Taking abs() of the difference instead folded
+            // the shift back on itself once center_of_mass_y rose above
+            // max_y_val, driving the grid the wrong way with a kink at the
+            // crossing point
+            center.y = center_of_mass_y - max_y_val;
+            break;
+        }
+        case GridType::None:
+            break;
     }
-    if (total_mass != 0)
-        center_of_mass_y /= total_mass;
-
-    double vertical_shift = abs(center_of_mass_y - max_y_val);
-    double difference = abs(vertical_shift - previous_vertical_shift);
-    if (difference >= 0.2) {
-        center.y = -vertical_shift;
-        previous_vertical_shift = vertical_shift;
-    } else
-        center.y = -previous_vertical_shift;
-    max_y_val = -std::numeric_limits<double>::infinity();
-
-    if (settings.type == GridType::Flat)
-        center.y = settings.flat_grid_y;
 
     // floor (not truncate) the camera offset so adjacent grid indices always
     // map to x/z values exactly spacing_between_slices apart, even across 0
@@ -233,15 +263,8 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
             int depth_vector_idx = depth + slices;
 
             double y = 0;
-            if (settings.type == GridType::SpacetimeCurved) {
-                for (const Object& obj: scene.objects) {
-                    double r_s = (2 * gravitational_constant * obj.mass) / (speed_of_light * speed_of_light);
-                    double distance = obj.position.distance({(double)x, 0, (double)z});
-                    distance = std::max(distance, r_s); // Flamm's paraboloid is only defined for distance >= r_s
-                    y += settings.space_time_curve_factor * sqrt(r_s * (distance - r_s));
-                }
-                max_y_val = std::max(max_y_val, y);
-            }
+            if (settings.type == GridType::SpacetimeCurved)
+                y = curvature_at(x, z, settings);
             y += center.y;
             grid_y_values[horiz_vector_idx * grid_dimensions + depth_vector_idx] = y;
 

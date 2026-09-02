@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <cstddef>
-#include <limits>
 #include <optional>
 #include <raylib.h>
 #include <vector>
@@ -83,11 +82,13 @@ private:
     // animation snaps the camera almost fully onto it, looking like a jitter/teleport
     Vector3 camera_position_lerp_start_position{};
 
-    // scratch buffer + one-frame-lagged smoothing value for the spacetime
-    // curvature grid; not logical state, so draw_spacetime_curvature can stay const
+    // scratch buffer for the spacetime curvature grid; not logical state,
+    // so draw_spacetime_curvature can stay const
     mutable std::vector<double> grid_y_values;
-    mutable double max_y_val = -std::numeric_limits<double>::infinity();
-    mutable double previous_vertical_shift = 0;
+
+    // height of Flamm's paraboloid at (x, z) on the grid plane: the sum of
+    // every object's contribution to how far the sheet is stretched there
+    double curvature_at(double x, double z, const GridSettings& settings) const;
 
     // draws the spacetime curvature grid, or normal grid depending on grid settings;
     // must run inside Begin/EndMode3D
