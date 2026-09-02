@@ -68,6 +68,7 @@ void DragVelocity(Spherical& velocity) {
                 "%le c",
                 ImGuiSliderFlags_AlwaysClamp
         );
+        ImGui::SetItemTooltip("The velocity, multiplied by the speed of light");
         end_component();
     }
 
@@ -85,6 +86,7 @@ void DragVelocity(Spherical& velocity) {
                 "%.3f rad",
                 ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_WrapAround
         );
+        ImGui::SetItemTooltip("The \"longitude\" of the velocity");
         end_component();
     }
 
@@ -102,6 +104,7 @@ void DragVelocity(Spherical& velocity) {
                 "%.3f rad",
                 ImGuiSliderFlags_None
         );
+        ImGui::SetItemTooltip("The \"colatitude\" of the velocity");
         end_component();
     }
 
