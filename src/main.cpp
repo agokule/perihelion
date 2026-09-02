@@ -392,17 +392,6 @@ int main(int argc, char* argv[]) {
                         is_object_in_camera(velocity_cone->tip.to_vector3(), camera)) &&
                         !camera_pan_enabled
                     ) {
-                        // velocity cone is visible on screen
-                        auto mouse_pos = GetMousePosition();
-                        auto cone_tip_pos = GetWorldToScreen(velocity_cone->tip.to_vector3(), camera);
-                        auto cone_base_pos = GetWorldToScreen(velocity_cone->base.to_vector3(), camera);
-
-                        float cone_screen_height = Vector2Length(cone_tip_pos - cone_base_pos);
-
-                        bool is_mouse_on_cone =
-                            Vector2Distance(cone_tip_pos, mouse_pos) < 9 ||
-                            Vector2Distance(cone_base_pos, mouse_pos) < 9;
-
                         if (changing_velocity_of_obj || (IsKeyPressed(KEY_V))) {
                             bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_axis_info);
                             if (should_stop)
