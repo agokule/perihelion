@@ -4,5 +4,5 @@
 #include <vector>
 
 // returns true if user is done editing
-bool ObjectEditor(int obj_idx, Object& obj, const std::vector<Object>& objs);
+bool ObjectEditor(int obj_idx, Object& obj, std::vector<Object>& objs);
 

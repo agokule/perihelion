@@ -32,3 +32,9 @@ Vector3Double velocity_to_arrow_offset(Vector3Double velocity, double surface_ra
 // offset is at or inside the object's own surface, i.e. not a valid drag.
 std::optional<Vector3Double> arrow_offset_to_velocity(Vector3Double offset, double surface_radius, double velocity_arrow_scale);
 
+enum class Axis {
+    X, Y, Z
+};
+
+Vector3Double axis_unit_vector(Axis axis);
+

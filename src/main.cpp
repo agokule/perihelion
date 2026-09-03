@@ -25,11 +25,7 @@
 #include <format>
 #include <iostream>
 #include <optional>
-#include <utility>
 
-enum class Axis {
-    X, Y, Z
-};
 
 struct AxisChangeInfo {
     Axis axis;
@@ -46,15 +42,6 @@ struct AxisChangeInfo {
     // the pos_local/normalize() math below and the velocity flies off.
     Vector3 original_pos;
 };
-
-Vector3Double axis_unit_vector(Axis axis) {
-    switch (axis) {
-        case Axis::X: return Vector3Double{1.0, 0.0, 0.0};
-        case Axis::Y: return Vector3Double{0.0, 1.0, 0.0};
-        case Axis::Z: return Vector3Double{0.0, 0.0, 1.0};
-    }
-    std::unreachable();
-}
 
 std::optional<Axis> get_axis_from_key(KeyboardKey key) {
     switch (key) {

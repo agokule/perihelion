@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include <algorithm>
 #include <optional>
+#include <utility>
 
 void draw_text_centered(const std::string& text, Vector2 pos, int font_size, Color color) {
     auto [width, height] = MeasureTextEx(GetFontDefault(), text.c_str(), font_size, 2);
@@ -115,5 +116,14 @@ std::optional<Vector3Double> arrow_offset_to_velocity(Vector3Double offset, doub
 
     double magnitude = (dist_from_center - surface_radius) / velocity_arrow_scale;
     return offset.normalize() * magnitude;
+}
+
+Vector3Double axis_unit_vector(Axis axis) {
+    switch (axis) {
+        case Axis::X: return Vector3Double{1.0, 0.0, 0.0};
+        case Axis::Y: return Vector3Double{0.0, 1.0, 0.0};
+        case Axis::Z: return Vector3Double{0.0, 0.0, 1.0};
+    }
+    std::unreachable();
 }
 
