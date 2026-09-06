@@ -374,11 +374,7 @@ int main(int argc, char* argv[]) {
                         right_click_location = GetMousePosition();
                         ImGui::OpenPopup("Right Click Menu");
                     }
-                    if (velocity_cone &&
-                        (is_object_in_camera(velocity_cone->base.to_vector3(), camera) ||
-                        is_object_in_camera(velocity_cone->tip.to_vector3(), camera)) &&
-                        !camera_pan_enabled
-                    ) {
+                    if (velocity_cone && !camera_pan_enabled) {
                         if (changing_velocity_of_obj || (IsKeyPressed(KEY_V))) {
                             bool should_stop = change_velocity_using_cone(velocity_cone, camera, changing_velocity_of_obj, simulation, settings, temp_state, changing_velocity_axis_info);
                             if (should_stop)
