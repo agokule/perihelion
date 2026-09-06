@@ -83,16 +83,38 @@ target_link_libraries(Perihelion PRIVATE raylib)
 
 # on Web targets, we need CMake to generate a HTML webpage. 
 if(EMSCRIPTEN)
+    add_custom_command(TARGET Perihelion POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+                ${CMAKE_SOURCE_DIR}/assets
+                ${CMAKE_BINARY_DIR}/assets
+    )
+
     # makes the output name index.html
     set(CMAKE_EXECUTABLE_SUFFIX ".html" CACHE INTERNAL "")
     set_target_properties(Perihelion PROPERTIES OUTPUT_NAME "index")
 
     message("${CMAKE_SOURCE_DIR}html/shell-file.html")
-    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --shell-file ${CMAKE_SOURCE_DIR}/html/shell-file.html")
+    #set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --shell-file ${CMAKE_SOURCE_DIR}/html/shell-file.html")
+
+    # preload files
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/fonts/nerdfont/SymbolsNerdFont-Regular.ttf")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/images/myersalex216-space-2638158.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_earth_daymap.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_jupiter.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_mars.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_mercury.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_moon.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_saturn.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_sun.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_uranus.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_venus_surface.jpg")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/shaders/glsl100/skybox.vs")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/shaders/glsl100/skybox.fs")
+
     if (DISTRIBUTION_MODE)
         set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} -O3")
     endif()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s ALLOW_MEMORY_GROWTH -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
     set_target_properties(Perihelion PROPERTIES LINK_FLAGS "${EMMAKE_CXX_CFLAGS}")
 endif()
 
