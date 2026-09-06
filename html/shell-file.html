@@ -34,7 +34,7 @@
         totalDependencies: 0,
         monitorRunDependencies(left) {
           this.totalDependencies = Math.max(this.totalDependencies, left);
-          setStatus(left
+          console.log(left
             ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')'
             : '');
         },

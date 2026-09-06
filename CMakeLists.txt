@@ -94,7 +94,7 @@ if(EMSCRIPTEN)
     set_target_properties(Perihelion PROPERTIES OUTPUT_NAME "index")
 
     message("${CMAKE_SOURCE_DIR}html/shell-file.html")
-    #set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --shell-file ${CMAKE_SOURCE_DIR}/html/shell-file.html")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --shell-file ${CMAKE_SOURCE_DIR}/html/shell-file.html")
 
     # preload files
     set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/fonts/nerdfont/SymbolsNerdFont-Regular.ttf")
