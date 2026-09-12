@@ -544,10 +544,6 @@ AppData* initialize() {
     app_data->camera.fovy = 45.0f;                                // Camera field-of-view Y
     app_data->camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
-    // NOTE: on the web this is a no-op until the user clicks -- Pointer Lock
-    // needs a user gesture -- so the first frames there start with the cursor
-    // visible and camera panning off (see camera_pan_enabled in update_and_draw).
-    DisableCursor();
     SetExitKey(KEY_NULL);
 
     static const ImWchar icon_ranges[] = {
