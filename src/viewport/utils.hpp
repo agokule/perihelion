@@ -38,6 +38,15 @@ enum class Axis {
 
 Vector3Double axis_unit_vector(Axis axis);
 
+// Whether the cursor is currently captured for camera panning (i.e.
+// DisableCursor() is in effect). Use this instead of raylib's
+// IsCursorHidden(): on desktop the two agree, but on web DisableCursor() only
+// *requests* pointer lock and never sets the flag IsCursorHidden() reads, so
+// that stays false forever there. This asks the browser directly instead,
+// which also picks up the lock being released out from under us -- while
+// locked, the browser handles Escape itself, as it does switching tabs.
+bool is_cursor_locked();
+
 // A drop-in replacement for raylib's built-in default shader, but with the
 // vertex stage's position math forced to highp float instead of raylib's
 // actual mediump default on GRAPHICS_API_OPENGL_ES2 (see

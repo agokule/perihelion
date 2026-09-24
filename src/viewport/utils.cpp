@@ -6,6 +6,10 @@
 #include <optional>
 #include <utility>
 
+#if defined(__EMSCRIPTEN__)
+#include <emscripten/emscripten.h>
+#endif
+
 void draw_text_centered(const std::string& text, Vector2 pos, int font_size, Color color) {
     auto [width, height] = MeasureTextEx(GetFontDefault(), text.c_str(), font_size, 2);
 
@@ -125,6 +129,14 @@ Vector3Double axis_unit_vector(Axis axis) {
         case Axis::Z: return Vector3Double{0.0, 0.0, 1.0};
     }
     std::unreachable();
+}
+
+bool is_cursor_locked() {
+#if defined(__EMSCRIPTEN__)
+    return EM_ASM_INT({ return document.pointerLockElement === Module.canvas ? 1 : 0; });
+#else
+    return IsCursorHidden();
+#endif
 }
 
 Shader get_highp_default_shader() {

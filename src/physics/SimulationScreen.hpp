@@ -25,8 +25,8 @@ public:
     // camera is up to date for this frame's render. mouse_delta/
     // mouse_wheel_move are this frame's raw mouse movement/scroll, read by
     // the caller before the frame started drawing rather than fetched in
-    // here with GetMouseDelta()/GetMouseWheelMove() -- see handle_events'
-    // comment in main.cpp for why that read can't happen mid-draw on web.
+    // here with GetMouseDelta()/GetMouseWheelMove(), so all raw input reads
+    // stay in main.cpp's handle_events (see its comment).
     void update_camera(Camera3D& camera, const SimulationSettings& settings,
                         bool camera_pan_enabled, Vector2 mouse_delta, float mouse_wheel_move);
 

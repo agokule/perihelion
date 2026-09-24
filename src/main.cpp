@@ -245,16 +245,14 @@ bool change_velocity_using_cone(AppData& app) {
 
 // All input handling, run before anything is drawn this frame.
 //
-// The ordering matters on the web: raylib does not reliably report input
-// that is read after the frame has been drawn -- confirmed so far for
-// IsKeyPressed, IsMouseButtonPressed, GetMouseDelta and GetMouseWheelMove --
-// so every such read has to happen here, ahead of the draw, with the result
-// threaded down to whatever needs it during the draw (left_click_pos,
-// mouse_delta, mouse_wheel_move on AppData). Plain state like IsKeyDown or
-// the mouse's absolute position (GetMousePosition) does survive a mid-draw
-// read, which is why ImGui's own input keeps working from inside the draw
-// while the raylib reads above silently returned nothing/zero when they
-// used to be called from there.
+// The ordering matters on the web: raylib does not reliably report
+// edge-triggered input (IsKeyPressed, IsMouseButtonPressed) that is read after
+// the frame has been drawn, so every raw input read happens here, ahead of the
+// draw, with the result threaded down to whatever needs it during the draw
+// (left_click_pos, mouse_delta, mouse_wheel_move on AppData). Plain state like
+// IsKeyDown or the mouse's absolute position (GetMousePosition) does survive a
+// mid-draw read, which is why ImGui's own input keeps working from inside the
+// draw.
 // See https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5).
 //
 // Two consequences of running ahead of the draw:
@@ -267,17 +265,16 @@ bool change_velocity_using_cone(AppData& app) {
 // The order of the branches in here is load-bearing; see the comments on the
 // individual ones.
 void handle_events(AppData& app) {
-    app.camera_pan_enabled = IsCursorHidden();
+    // not IsCursorHidden(): on web that never turns true after DisableCursor()
+    // (see is_cursor_locked), which left camera panning permanently disabled
+    // there in both camera modes
+    app.camera_pan_enabled = is_cursor_locked();
     if (app.camera_pan_enabled)
         update_camera(&app.camera, app.simulation.current_selected_object == -1 ? CAMERA_FREE : CAMERA_CUSTOM);
 
-    // GetMouseDelta/GetMouseWheelMove fed SimulationScreen::update_camera's
-    // orbit-follow camera directly until this frame's read moved here:
-    // called from inside draw_simulation (i.e. after BeginDrawing), mouse
-    // look and scroll-to-zoom around a selected object didn't respond to
-    // the mouse at all on web -- the same class of issue as
-    // IsKeyPressed/IsMouseButtonPressed below, just not literally one of
-    // the two functions named in the raylib wiki's warning
+    // read here rather than inside SimulationScreen::update_camera (which
+    // runs during the draw) to keep every raw input read in this function;
+    // see the comment above it
     app.mouse_delta = GetMouseDelta();
     app.mouse_wheel_move = GetMouseWheelMove();
 
@@ -300,7 +297,7 @@ void handle_events(AppData& app) {
     if (!imgui_has_focus) {
         // only records the click; draw_simulation opens the popup from inside
         // the ImGui frame, which is the only place OpenPopup can be called
-        if (!IsCursorHidden() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !app.adding_object) {
+        if (!is_cursor_locked() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !app.adding_object) {
             app.simulation.select_object({-1, 0}, app.settings);
             app.right_click_location = GetMousePosition();
             app.right_click_menu_should_open = true;
@@ -410,10 +407,10 @@ void handle_events(AppData& app) {
 // Steps the simulation and draws one frame of it. Assumes it is called between
 // BeginDrawing and EndDrawing, with handle_events already run for this frame.
 //
-// Nothing in here may read fresh raylib input -- IsKeyPressed,
-// IsMouseButtonPressed, GetMouseDelta, GetMouseWheelMove and friends are all
-// unreliable once the draw has begun on web (see handle_events' comment).
-// Use the AppData fields handle_events already populated instead.
+// Nothing in here should read fresh raylib input: edge-triggered reads
+// (IsKeyPressed, IsMouseButtonPressed) are unreliable once the draw has begun
+// on web, and keeping every raw read in handle_events avoids having to decide
+// case by case (see its comment). Use the AppData fields it populated instead.
 void draw_simulation(AppData& app) {
     app.simulation.simulate_physics(app.get_settings_state());
     app.simulation.update_camera(app.camera, app.get_settings_state(), app.camera_pan_enabled, app.mouse_delta, app.mouse_wheel_move);
