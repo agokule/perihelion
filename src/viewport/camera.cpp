@@ -1,4 +1,5 @@
 #include "viewport/camera.hpp"
+#include "viewport/utils.hpp"
 
 #include <rcamera.h>
 #include <raymath.h>
@@ -12,7 +13,7 @@ constexpr float camera_mouse_move_sensitivity = 0.003f;
 
 void update_camera(Camera *camera, int mode)
 {
-    Vector2 mousePositionDelta = GetMouseDelta();
+    Vector2 mousePositionDelta = get_mouse_delta();
 
     bool moveInWorldPlane = ((mode == CAMERA_FIRST_PERSON) || (mode == CAMERA_THIRD_PERSON));
     bool rotateAroundTarget = ((mode == CAMERA_THIRD_PERSON) || (mode == CAMERA_ORBITAL));
@@ -59,7 +60,7 @@ void update_camera(Camera *camera, int mode)
         // Camera pan (for CAMERA_FREE)
         if ((mode == CAMERA_FREE) && (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)))
         {
-            const Vector2 mouseDelta = GetMouseDelta();
+            const Vector2 mouseDelta = get_mouse_delta();
             if (mouseDelta.x > 0.0f) CameraMoveRight(camera, cameraPanSpeed, moveInWorldPlane);
             if (mouseDelta.x < 0.0f) CameraMoveRight(camera, -cameraPanSpeed, moveInWorldPlane);
             if (mouseDelta.y > 0.0f) CameraMoveUp(camera, -cameraPanSpeed);

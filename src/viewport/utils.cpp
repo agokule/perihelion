@@ -139,6 +139,22 @@ bool is_cursor_locked() {
 #endif
 }
 
+Vector2 get_mouse_delta() {
+#if defined(__EMSCRIPTEN__)
+    // Pointer-locked movement on web comes out about twice as large as
+    // GLFW's raw mouse motion on desktop for the same physical movement.
+    // Not a HiDPI effect -- it was tuned on a display with a
+    // devicePixelRatio of 1 -- so most likely the browser's movementX/Y
+    // include OS pointer acceleration, which desktop's raw, unaccelerated
+    // motion doesn't. The factor was tuned by feel rather than derived, so
+    // revisit it if web panning speed drifts on other setups.
+    constexpr float web_mouse_delta_scale = 0.5f;
+    return GetMouseDelta() * web_mouse_delta_scale;
+#else
+    return GetMouseDelta();
+#endif
+}
+
 Shader get_highp_default_shader() {
     // fsFileName = nullptr keeps raylib's own default fragment shader (still
     // mediump on web, which is fine -- it only samples a texture and

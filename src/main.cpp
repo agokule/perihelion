@@ -275,7 +275,7 @@ void handle_events(AppData& app) {
     // read here rather than inside SimulationScreen::update_camera (which
     // runs during the draw) to keep every raw input read in this function;
     // see the comment above it
-    app.mouse_delta = GetMouseDelta();
+    app.mouse_delta = get_mouse_delta();
     app.mouse_wheel_move = GetMouseWheelMove();
 
     // recomputed every frame regardless of ImGui focus, matching

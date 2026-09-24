@@ -47,6 +47,12 @@ Vector3Double axis_unit_vector(Axis axis);
 // locked, the browser handles Escape itself, as it does switching tabs.
 bool is_cursor_locked();
 
+// raylib's GetMouseDelta(), scaled on web so a given physical mouse movement
+// pans the camera about as far as it does on desktop. Use this everywhere
+// instead of calling GetMouseDelta() directly, so both camera modes stay in
+// step.
+Vector2 get_mouse_delta();
+
 // A drop-in replacement for raylib's built-in default shader, but with the
 // vertex stage's position math forced to highp float instead of raylib's
 // actual mediump default on GRAPHICS_API_OPENGL_ES2 (see
