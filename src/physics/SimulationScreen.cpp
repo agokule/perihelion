@@ -123,12 +123,12 @@ void SimulationScreen::add_object(const Object& obj) {
 }
 
 void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings& settings,
-                                      bool camera_pan_enabled) {
+                                      bool camera_pan_enabled, Vector2 mouse_delta, float mouse_wheel_move) {
     if (current_selected_object == -1)
         return;
 
     const Object& obj = scene.objects.at(current_selected_object);
-    Vector2 mouseDelta = camera_pan_enabled ? GetMouseDelta() : Vector2{0, 0};
+    Vector2 mouseDelta = camera_pan_enabled ? mouse_delta : Vector2{0, 0};
     alpha -= mouseDelta.x * settings.selected_sensitivity;
     beta  += mouseDelta.y * settings.selected_sensitivity;
 
@@ -137,8 +137,8 @@ void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings&
     if (beta < -1.4f) beta = -1.4f;
 
     // Zoom with mouse scroll wheel
-    auto mouse_wheel_move = camera_pan_enabled ? GetMouseWheelMove() : 0;
-    distance -= mouse_wheel_move * wheel_sensitivity;
+    float wheel_move = camera_pan_enabled ? mouse_wheel_move : 0.0f;
+    distance -= wheel_move * wheel_sensitivity;
     if (distance < obj.radius) distance = obj.radius; // Prevent going inside the object
 
     // Calculate camera position using spherical trigonometry
@@ -313,14 +313,15 @@ void SimulationScreen::draw_world(const Camera3D& camera, const SimulationSettin
 }
 
 std::optional<ObjectSelection> SimulationScreen::draw_object_selection_ui(Camera3D& camera,
-                                                                           const SimulationSettings& settings) {
+                                                                           const SimulationSettings& settings,
+                                                                           std::optional<Vector2> left_click_pos) {
     std::optional<ObjectSelection> selection = std::nullopt;
 
     int idx = 0;
     for (const Object& obj : scene.objects) {
         obj.draw_label(camera);
 
-        if (obj.draw_outline(settings.objects_scale, camera))
+        if (obj.draw_outline(settings.objects_scale, camera, left_click_pos))
             selection = ObjectSelection{idx, obj.radius};
 
         idx++;

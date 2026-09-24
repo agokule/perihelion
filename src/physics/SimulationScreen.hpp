@@ -22,17 +22,25 @@ public:
     void simulate_physics(const SimulationSettings& settings);
 
     // follows the selected object, if any; must run before draw_world so the
-    // camera is up to date for this frame's render
+    // camera is up to date for this frame's render. mouse_delta/
+    // mouse_wheel_move are this frame's raw mouse movement/scroll, read by
+    // the caller before the frame started drawing rather than fetched in
+    // here with GetMouseDelta()/GetMouseWheelMove() -- see handle_events'
+    // comment in main.cpp for why that read can't happen mid-draw on web.
     void update_camera(Camera3D& camera, const SimulationSettings& settings,
-                        bool camera_pan_enabled);
+                        bool camera_pan_enabled, Vector2 mouse_delta, float mouse_wheel_move);
 
     // draws the grid, trails and objects; wraps its own Begin/EndMode3D
     void draw_world(const Camera3D& camera, const SimulationSettings& settings) const;
 
     // draws the ImGui object picker; call between rlImGuiBegin/rlImGuiEnd.
     // returns the object the user picked this frame, if any, so the caller
-    // can decide to call select_object
-    std::optional<ObjectSelection> draw_object_selection_ui(Camera3D& camera, const SimulationSettings& settings);
+    // can decide to call select_object. left_click_pos is this frame's
+    // left-click position if the button was pressed this frame, read by the
+    // caller before the frame started drawing (see draw_outline's use of it,
+    // and handle_events' comment in main.cpp for why).
+    std::optional<ObjectSelection> draw_object_selection_ui(Camera3D& camera, const SimulationSettings& settings,
+                                                             std::optional<Vector2> left_click_pos);
 
     // makes idx the selected object and starts the camera lerp toward it
     void select_object(ObjectSelection selection, const SimulationSettings& settings);

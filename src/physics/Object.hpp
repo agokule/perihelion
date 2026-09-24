@@ -70,8 +70,12 @@ struct Object {
 
     void draw(float scale) const;
 
-    // returns true if object was selected
-    bool draw_outline(float scale, const Camera3D& camera) const;
+    // returns true if object was selected. left_click_pos is this frame's
+    // left-click position if the button was pressed this frame, or nullopt
+    // -- read by the caller before the frame started drawing, since
+    // IsMouseButtonPressed read mid-draw is unreliable on web (see
+    // handle_events' comment in main.cpp)
+    bool draw_outline(float scale, const Camera3D& camera, std::optional<Vector2> left_click_pos) const;
 
     void draw_trail() const;
 

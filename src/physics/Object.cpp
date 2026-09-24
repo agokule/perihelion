@@ -139,7 +139,7 @@ void Object::draw(float scale) const {
         DrawModelEx(*get<ObjectTextureInfo>(drawing_info).model, position.to_vector3(), {1, 0, 0}, 90.0f, Vector3Ones * scale * radius, WHITE);
 }
 
-bool Object::draw_outline(float scale, const Camera3D& camera) const {
+bool Object::draw_outline(float scale, const Camera3D& camera, std::optional<Vector2> left_click_pos) const {
     if (!is_object_in_camera(position.to_vector3(), camera))
         return false;
 
@@ -150,10 +150,9 @@ bool Object::draw_outline(float scale, const Camera3D& camera) const {
     if (position.distance(Vector3Double{camera.position}) > 50.0f)
         DrawCircleLinesV(circle_pos, screen_radius, WHITE);
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 mouse_pos = GetMousePosition();
+    if (left_click_pos) {
         return !ImGui::GetIO().WantCaptureMouse
-            && CheckCollisionPointCircle(mouse_pos, circle_pos, screen_radius);
+            && CheckCollisionPointCircle(*left_click_pos, circle_pos, screen_radius);
     }
     return false;
 }
