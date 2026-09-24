@@ -102,13 +102,24 @@ Vector3Double SimulationScreen::camera_offset_from_selected() const {
 }
 
 void SimulationScreen::add_object(const Object& obj) {
+    const Object* data_before = scene.objects.data();
     scene.objects.push_back(obj);
 
     // pushing back may reallocate scene.objects, which copies (rather than
     // moves) the existing Objects and drops their loaded texture/model in
-    // the process (see ObjectTextureInfo's copy constructor) — reload them
-    for (Object& o : scene.objects)
-        o.load_model();
+    // the process (see ObjectTextureInfo's copy constructor) — reload them,
+    // but only when a reallocation actually happened (load_preset reserves
+    // capacity for 100 up front specifically so this is rare): reloading
+    // means re-decoding every object's JPEG and re-uploading it to the GPU,
+    // which is wasteful busywork every time in the common case, and on web
+    // it's exactly the kind of large, bursty allocation that can trigger a
+    // WASM heap growth mid-frame
+    if (scene.objects.data() != data_before) {
+        for (Object& o : scene.objects)
+            o.load_model();
+    } else {
+        scene.objects.back().load_model();
+    }
 }
 
 void SimulationScreen::update_camera(Camera3D& camera, const SimulationSettings& settings,
