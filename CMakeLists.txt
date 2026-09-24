@@ -111,6 +111,7 @@ if(EMSCRIPTEN)
     set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/textures/2k_venus_surface.jpg")
     set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/shaders/glsl100/skybox.vs")
     set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/shaders/glsl100/skybox.fs")
+    set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} --preload-file assets/shaders/glsl100/default_highp.vs")
 
     if (DISTRIBUTION_MODE)
         set(EMMAKE_CXX_CFLAGS "${EMMAKE_CXX_CFLAGS} -O3")

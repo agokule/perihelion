@@ -127,3 +127,11 @@ Vector3Double axis_unit_vector(Axis axis) {
     std::unreachable();
 }
 
+Shader get_highp_default_shader() {
+    // fsFileName = nullptr keeps raylib's own default fragment shader (still
+    // mediump on web, which is fine -- it only samples a texture and
+    // multiplies colors, no position math to lose precision on)
+    static Shader shader = LoadShader("./assets/shaders/glsl100/default_highp.vs", nullptr);
+    return shader;
+}
+

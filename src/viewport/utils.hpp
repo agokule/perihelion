@@ -38,3 +38,14 @@ enum class Axis {
 
 Vector3Double axis_unit_vector(Axis axis);
 
+// A drop-in replacement for raylib's built-in default shader, but with the
+// vertex stage's position math forced to highp float instead of raylib's
+// actual mediump default on GRAPHICS_API_OPENGL_ES2 (see
+// assets/shaders/glsl100/default_highp.vs for why that matters on web).
+// Lazily loaded on first call and cached for the life of the app; only
+// meaningful once there's a live GL context (i.e. after InitWindow), and a
+// no-op to call on native -- callers should guard use with
+// `#if defined(__EMSCRIPTEN__)`, since native GL33 has no precision
+// qualifiers to work around and doesn't need this.
+Shader get_highp_default_shader();
+

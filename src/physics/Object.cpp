@@ -88,6 +88,12 @@ void ObjectTextureInfo::load_model() {
     model = LoadModelFromMesh(sphere);
 
     model->materials[0].maps[MATERIAL_MAP_ALBEDO].texture = *texture;
+#if defined(__EMSCRIPTEN__)
+    // DrawModel/DrawMesh use material.shader directly, ignoring whatever
+    // BeginShaderMode has active -- so this needs to be set per-model rather
+    // than wrapping the draw call (see get_highp_default_shader's comment)
+    model->materials[0].shader = get_highp_default_shader();
+#endif
     UnloadImage(image);
 }
 

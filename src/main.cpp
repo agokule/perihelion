@@ -386,6 +386,15 @@ void draw_simulation(AppData& app) {
 
     BeginMode3D(app.camera);
     app.skybox.draw();
+#if defined(__EMSCRIPTEN__)
+    // grid lines, trails, the velocity arrow and its guide line all go
+    // through raylib's immediate-mode batch renderer (rlBegin/rlVertex3f),
+    // which does respect BeginShaderMode -- unlike the textured planet
+    // meshes below, which set their shader directly on the model instead
+    // (see ObjectTextureInfo::load_model). Skybox::draw() binds its own
+    // shader explicitly and ignores this too, so it's unaffected either way.
+    BeginShaderMode(get_highp_default_shader());
+#endif
     app.simulation.draw_world(app.camera, app.get_settings_state());
 
     if (app.adding_object) {
@@ -433,6 +442,9 @@ void draw_simulation(AppData& app) {
         }
     }
 
+#if defined(__EMSCRIPTEN__)
+    EndShaderMode();
+#endif
     EndMode3D();
 
     // draw 2d ui
