@@ -50,18 +50,9 @@ jobs:
           version: ${{env.EM_VERSION}}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
-      - name: Show file tree
-        run: |
-          tree
-
-      - name: Ls cmd
-        run: |
-          ls ./assets/fonts/nerdfont/SymbolsNerdFont-Regular.ttf
-
       # Create and build to build-web/bin
       - name: Build application
         run: |
-          pwd
           just build-web Release
 
       - name: Upload artifact
