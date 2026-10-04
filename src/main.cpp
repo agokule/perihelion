@@ -28,6 +28,17 @@
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten/emscripten.h>
+
+// disable a bunch of annoying browser keyboard shortcuts
+EM_JS(void, disable_browser_shortcuts, (), {
+    document.addEventListener('keydown', function(e) {
+        // Block Ctrl+S, Ctrl+W, Ctrl+D, Ctrl+E
+        if ((e.ctrlKey && (e.key === 's' || e.key === 'w' || e.key === 'd' || e.key === 'e'))) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+});
+
 #endif
 
 
@@ -564,6 +575,10 @@ AppData* initialize() {
     // Initialization
     int screenWidth = 1280;
     int screenHeight = 800;
+
+#ifdef __EMSCRIPTEN__
+    disable_browser_shortcuts();
+#endif
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Perihelion");
