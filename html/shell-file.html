@@ -25,7 +25,7 @@
       document.addEventListener('wheel',     e => e.preventDefault(), { passive: false });
       document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
       document.addEventListener('keydown',   e => {
-        if (['ArrowUp','ArrowDown','Space',' '].includes(e.key)) e.preventDefault();
+        if (['ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
       });
 
       var Module = {
