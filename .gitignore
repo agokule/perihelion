@@ -2,6 +2,8 @@ build/
 build-web/
 .cache/
 
+compile_commands.json
+
 # Claude Code local state & credentials
 .claude/settings.local.json
 .claude/worktrees/
