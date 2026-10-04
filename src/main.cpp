@@ -39,6 +39,14 @@ EM_JS(void, disable_browser_shortcuts, (), {
     }, { passive: false });
 });
 
+// just in case disabling Ctrl+w is not allowed in the specific browser
+EM_JS(void, warn_before_closing_browser_tab, (), {
+    window.addEventListener('beforeunload', function (e) {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to show prompt
+    });
+})
+
 #endif
 
 
@@ -578,6 +586,7 @@ AppData* initialize() {
 
 #ifdef __EMSCRIPTEN__
     disable_browser_shortcuts();
+    warn_before_closing_browser_tab();
 #endif
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
