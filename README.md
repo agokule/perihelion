@@ -2,6 +2,8 @@
 
 A Newtonian gravity simulator of the solar system, written in C++23 with [raylib](https://www.raylib.com/) and [Dear ImGui](https://github.com/ocornut/imgui). It runs natively on the desktop and in the browser through Emscripten.
 
+https://github.com/user-attachments/assets/3da515ea-ae87-4aed-8ccd-2482502588c6
+
 **[▶ Try it in your browser](https://agokule.github.io/perihelion/)**
 
 The project was inspired by [this YouTube video](https://www.youtube.com/watch?v=_YbGWoUaZg0).
