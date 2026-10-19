@@ -24,8 +24,6 @@ int ObjectSelector(const std::vector<Object>& objects, int current_selected) {
 
     RAIIWindow win {"##ObjectSelector", nullptr, flags};
 
-    // -1 (None) is a selectable position: Previous steps down into it,
-    // Next steps back out of it. It's the only way to get the free camera.
     {
         RAIIDisabled d {!has_objects || selected < 0};
         if (ImGui::Button(NF_FA_ARROW_LEFT_LONG))

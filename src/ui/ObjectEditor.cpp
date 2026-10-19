@@ -18,19 +18,14 @@ using std::get;
 
 namespace {
 
-// Direction tangent to the obj->other separation vector, in the plane
-// perpendicular to `axis` -- obtained by rotating that separation direction
-// 90 degrees about `axis`. Shared by both orbit functions below.
+// direction tangent to the (obj.position - other.position) vector, in the plane perpendicular to `axis`
 Vector3Double orbit_tangent_direction(const Object& obj, const Object& other, Axis axis) {
     Vector3Double direction = (other.position - obj.position).normalize();
     Vector3 axis_vec = axis_unit_vector(axis).to_vector3();
-    // Vector3RotateByAxisAngle takes radians, not degrees.
     return Vector3RotateByAxisAngle(direction.to_vector3(), axis_vec, 90.0f * DEG2RAD);
 }
 
-// Circular-orbit velocity for `obj` around `other`, treating `other` as a
-// fixed anchor (only correct when other.mass >> obj.mass) and boosting by
-// other's own velocity so the result is valid in other's existing frame.
+// returns the needed velocity for `obj` to orbit `other` in a perfect circle
 Vector3Double velocity_to_orbit_other(const Object& obj, const Object& other, Axis axis) {
     double standard_gravitational_parameter = gravitational_constant * other.mass;
     double distance = obj.position.distance(other.position);
@@ -46,12 +41,8 @@ struct MutualOrbitVelocities {
     Vector3Double other_velocity;
 };
 
-// Circular MUTUAL orbit for a comparable-mass pair: the relative separation
-// obeys Kepler's problem with the SUMMED mass (standard two-body reduction),
-// then splits that relative velocity around the pair's current combined
-// momentum, so an already-drifting pair keeps drifting together instead of
-// being reset to rest. Reduces to velocity_to_orbit_other's result (for obj)
-// / a barely-perturbed other.velocity (for other) when other.mass >> obj.mass.
+// edits the 2 objects's velocities so that they orbit eachother in perfect circles
+// TODO: maybe add an eccentricity parameter so that eliptical orbits are possible like in Universe Sandbox?
 MutualOrbitVelocities velocities_to_orbit_eachother(const Object& obj, const Object& other, Axis axis) {
     double total_mass = obj.mass + other.mass;
     double distance = obj.position.distance(other.position);

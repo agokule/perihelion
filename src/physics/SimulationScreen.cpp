@@ -105,15 +105,7 @@ void SimulationScreen::add_object(const Object& obj) {
     const Object* data_before = scene.objects.data();
     scene.objects.push_back(obj);
 
-    // pushing back may reallocate scene.objects, which copies (rather than
-    // moves) the existing Objects and drops their loaded texture/model in
-    // the process (see ObjectTextureInfo's copy constructor) — reload them,
-    // but only when a reallocation actually happened (load_preset reserves
-    // capacity for 100 up front specifically so this is rare): reloading
-    // means re-decoding every object's JPEG and re-uploading it to the GPU,
-    // which is wasteful busywork every time in the common case, and on web
-    // it's exactly the kind of large, bursty allocation that can trigger a
-    // WASM heap growth mid-frame
+    // pushing back may reallocate scene.objects, so reloading their models is necessary just to be sure they are defined
     if (scene.objects.data() != data_before) {
         for (Object& o : scene.objects)
             o.load_model();
@@ -227,26 +219,11 @@ void SimulationScreen::draw_grid(const Camera3D& camera, const GridSettings& set
             if (total_mass != 0)
                 center_of_mass_y /= total_mass;
 
-            // the paraboloid keeps growing with distance, so its peak over the
-            // grid always sits at whichever corner is furthest from the masses.
-            // Evaluate those four corners directly, at the grid's real (unsnapped)
-            // extent, rather than taking a max over the sample lattice as it's
-            // built: that lattice is floored to the camera (see horiz_offset
-            // below), so the max taken over it stepped every time the camera
-            // crossed a spacing boundary and the whole lattice shifted one cell
-            // over -- which is what made the grid visibly hop up and down
             double max_y_val = -std::numeric_limits<double>::infinity();
             for (double corner_x : {center.x - radius, center.x + radius})
                 for (double corner_z : {center.z - radius, center.z + radius})
                     max_y_val = std::max(max_y_val, curvature_at(corner_x, corner_z, settings));
 
-            // line the peak of the sheet up with the scene's center of mass:
-            // every vertex adds center.y to a curvature in [0, max_y_val], so
-            // this is the shift that puts the highest of them at
-            // center_of_mass_y. Taking abs() of the difference instead folded
-            // the shift back on itself once center_of_mass_y rose above
-            // max_y_val, driving the grid the wrong way with a kink at the
-            // crossing point
             center.y = center_of_mass_y - max_y_val;
             break;
         }

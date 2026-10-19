@@ -17,6 +17,7 @@ void draw_text_centered(const std::string& text, Vector2 pos, int font_size, Col
     DrawText(text.c_str(), new_pos.x, new_pos.y, font_size, color);
 }
 
+// TODO: replace this complicated method with one that just uses GetWorldToScreen() function
 bool is_object_in_camera(Vector3 objectPos, const Camera3D& camera) {
     // 1. Calculate the camera's local coordinate axes
     Vector3 cameraForward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
@@ -142,13 +143,6 @@ bool is_cursor_locked() {
 Vector2 get_mouse_delta() {
 #if defined(__EMSCRIPTEN__)
 
-    // Pointer-locked movement on web comes out about twice as large as
-    // GLFW's raw mouse motion on desktop for the same physical movement.
-    // Not a HiDPI effect -- it was tuned on a display with a
-    // devicePixelRatio of 1 -- so most likely the browser's movementX/Y
-    // include OS pointer acceleration, which desktop's raw, unaccelerated
-    // motion doesn't. The factor was tuned by feel rather than derived, so
-    // revisit it if web panning speed drifts on other setups.
 #ifdef DEBUG
     // for some reason the emscripten debug build report mouse movement as doubled
     constexpr float web_mouse_delta_scale = 0.5f;
@@ -163,9 +157,6 @@ Vector2 get_mouse_delta() {
 }
 
 Shader get_highp_default_shader() {
-    // fsFileName = nullptr keeps raylib's own default fragment shader (still
-    // mediump on web, which is fine -- it only samples a texture and
-    // multiplies colors, no position math to lose precision on)
     static Shader shader = LoadShader("./assets/shaders/glsl100/default_highp.vs", nullptr);
     return shader;
 }

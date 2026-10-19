@@ -58,18 +58,10 @@ struct AxisChangeInfo {
 
     Vector2 original_mouse_pos;
 
-    // This is the object-relative offset the arrow tip had when the
-    // axis lock engaged (same frame as the non-locked branch below), not
-    // the object's absolute world position -- otherwise the two
-    // non-edited axes carry light-seconds-scale world coordinates into
-    // the pos_local/normalize() math below and the velocity flies off.
+    // the object-relative offset the arrow tip had when axis lock was engaged
     Vector3 original_pos;
 };
 
-// Every piece of state the frame callback needs. It has to outlive each frame
-// (under Emscripten the browser calls back into update_and_draw one frame at a
-// time and main() has already returned), so it lives on the heap and is
-// threaded through as a single argument instead of being locals in main().
 struct AppData {
     Camera3D camera = { 0 };
     bool camera_pan_enabled = true;
@@ -78,21 +70,8 @@ struct AppData {
     Skybox skybox {"./assets/images/myersalex216-space-2638158.jpg"};
 
     std::optional<Vector2> right_click_location = std::nullopt;
-    // set by handle_events, consumed by draw_simulation: input handling runs
-    // before the frame is drawn (see update_and_draw) but ImGui::OpenPopup can
-    // only be called from inside the ImGui frame, so the right click is
-    // recorded here and the popup is opened during the draw
     bool right_click_menu_should_open = false;
-    // this frame's left-click position, if the button was pressed this
-    // frame -- recomputed fresh every frame in handle_events (unlike
-    // right_click_location, not carried across frames) so
-    // Object::draw_outline's click-to-select can use it during the draw
-    // without calling IsMouseButtonPressed/GetMousePosition itself; see
-    // handle_events' comment for why
     std::optional<Vector2> left_click_pos = std::nullopt;
-    // this frame's raw mouse movement/scroll, likewise read pre-draw in
-    // handle_events for SimulationScreen::update_camera's orbit-follow
-    // camera to use during the draw
     Vector2 mouse_delta = {0, 0};
     float mouse_wheel_move = 0.0f;
     std::optional<Object> adding_object = std::nullopt;
@@ -116,9 +95,6 @@ struct AppData {
     };
     std::optional<SimulationSettings> temp_state = std::nullopt;
 
-    // the settings a transient action (placing an object, dragging a velocity
-    // arrow) is overriding right now, or the persisted ones if no such action
-    // is in progress
     SimulationSettings& get_settings_state() {
         return temp_state ? *temp_state : settings;
     }
@@ -129,9 +105,7 @@ struct AppData {
         changing_velocity_axis_info = std::nullopt;
     }
 
-    // NOTE: add_object can reallocate the object vector, invalidating every
-    // Object& taken from the simulation earlier in the frame -- only call this
-    // once those references are dead.
+    // note that this can re-allocate memory, so it's best to call this sparingly since Object& are common in the codebase...
     void stop_adding_object() {
         simulation.add_object(*adding_object);
         temp_state = std::nullopt;
@@ -214,9 +188,6 @@ bool change_velocity_using_cone(AppData& app) {
     auto mouse_pos = GetMousePosition();
 
     if (!app.changing_velocity_axis_info) {
-        // using camera_offset_from_selected instead of the real camera
-        // because the real camera loses decimal points of precision when
-        // far away from the origin (see camera_offset_from_selected's comment).
         Camera3D local_camera = app.camera;
         local_camera.position = app.simulation.camera_offset_from_selected().to_vector3();
         local_camera.target = Vector3Zero();
@@ -245,9 +216,6 @@ bool change_velocity_using_cone(AppData& app) {
         }
 
         auto mouse_change = mouse_pos - axis_lock.original_mouse_pos;
-        // horizontal_speed/vertical_speed already carry the pixels-per-world-unit
-        // scale (see capture site below), so this dot product yields world
-        // units directly -- no separate sensitivity constant needed.
         float change_along_axis = mouse_change.x * axis_lock.horizontal_speed + mouse_change.y * axis_lock.vertical_speed;
         *to_edit = *original + change_along_axis;
     }
@@ -262,44 +230,17 @@ bool change_velocity_using_cone(AppData& app) {
         return true;
 }
 
-// All input handling, run before anything is drawn this frame.
-//
-// The ordering matters on the web: raylib does not reliably report
-// edge-triggered input (IsKeyPressed, IsMouseButtonPressed) that is read after
-// the frame has been drawn, so every raw input read happens here, ahead of the
-// draw, with the result threaded down to whatever needs it during the draw
-// (left_click_pos, mouse_delta, mouse_wheel_move on AppData). Plain state like
-// IsKeyDown or the mouse's absolute position (GetMousePosition) does survive a
-// mid-draw read, which is why ImGui's own input keeps working from inside the
-// draw.
-// See https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5).
-//
-// Two consequences of running ahead of the draw:
-//   - imgui_wants_io() reports what ImGui decided during the *previous*
-//     frame's NewFrame. That is the value ImGui intends callers to poll input
-//     against, so this is fine, just one frame behind.
-//   - velocity_cone is last frame's. It is only used as an "is there an arrow
-//     on screen" gate, so a frame of lag costs nothing.
-//
-// The order of the branches in here is load-bearing; see the comments on the
-// individual ones.
 void handle_events(AppData& app) {
-    // not IsCursorHidden(): on web that never turns true after DisableCursor()
-    // (see is_cursor_locked), which left camera panning permanently disabled
-    // there in both camera modes
     app.camera_pan_enabled = is_cursor_locked();
     if (app.camera_pan_enabled)
         update_camera(&app.camera, app.simulation.current_selected_object == -1 ? CAMERA_FREE : CAMERA_CUSTOM);
 
-    // read here rather than inside SimulationScreen::update_camera (which
-    // runs during the draw) to keep every raw input read in this function;
-    // see the comment above it
+    // capturing mouse input here because Raylib does not support reading
+    // it during drawing a frame on emscripten so that the draw_simulation() function can read it
+    // see https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5)#faq--common-issues
+
     app.mouse_delta = get_mouse_delta();
     app.mouse_wheel_move = GetMouseWheelMove();
-
-    // recomputed every frame regardless of ImGui focus, matching
-    // draw_outline's existing behavior of gating on WantCaptureMouse only
-    // at the final hit-test rather than on this read
     app.left_click_pos = std::nullopt;
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         app.left_click_pos = GetMousePosition();
@@ -310,12 +251,9 @@ void handle_events(AppData& app) {
     if (app.adding_object && app.camera_pan_enabled)
         DisableCursor();
 
-    // one read per frame so every branch below agrees on who owns the input
     const bool imgui_has_focus = imgui_wants_io();
 
     if (!imgui_has_focus) {
-        // only records the click; draw_simulation opens the popup from inside
-        // the ImGui frame, which is the only place OpenPopup can be called
         if (!is_cursor_locked() && IsCursorOnScreen() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !app.adding_object) {
             app.simulation.select_object({-1, 0}, app.settings);
             app.right_click_location = GetMousePosition();
@@ -330,11 +268,9 @@ void handle_events(AppData& app) {
             }
 
             if (app.changing_velocity_of_obj) {
-                // NOTE: GetKeyPressed pops from raylib's keypress queue rather
-                // than querying state like IsKeyPressed -- calling it on more
-                // frames, or from more than one place, eats keys other
-                // handlers are waiting on.
-                std::optional<Axis> changing_velocity_axis = get_axis_from_key((KeyboardKey)GetKeyPressed());
+                std::optional<Axis> changing_velocity_axis = get_axis_from_key(
+                        (KeyboardKey)GetKeyPressed() // note that this function deletes keys from a queue, calling it multiple times is not a good idea
+                );
                 if (changing_velocity_axis) {
                     app.temp_state->paused = true;
                     const auto& selected = app.simulation.get_object(app.simulation.current_selected_object);
@@ -345,13 +281,9 @@ void handle_events(AppData& app) {
                     Vector3Double test_pos = original_pos + axis_unit_vector(*changing_velocity_axis);
                     Vector2 test_pos_screen = GetWorldToScreen(test_pos.to_vector3(), app.camera);
 
-                    // Raw (non-normalized) screen delta for a 1 world-unit
-                    // step along the axis -- its length is how many screen
-                    // pixels correspond to 1 world unit at the current zoom.
-                    // Dividing by its squared length (instead of just
-                    // normalizing) bakes that scale into the projection
-                    // below, so dragging tracks the mouse consistently
-                    // whether zoomed in or far out.
+                    // calculate how much the velocity arrow should move if the mouse moves one pixel
+                    // TODO: this is not accurate since the mouse movement should not be multiplied by a constant factor
+                    //       fix it.
                     Vector2 screen_delta = test_pos_screen - original_pos_screen;
                     float pixels_per_unit_sqr = Vector2LengthSqr(screen_delta);
                     Vector2 speed = pixels_per_unit_sqr > 1e-6f
@@ -375,20 +307,11 @@ void handle_events(AppData& app) {
             app.metrics_shown = !app.metrics_shown;
     }
 
-    // Deliberately outside the focus guard -- a drag whose arrow went away
-    // (object deselected, cone gone) has to be cancelled even while a widget
-    // has focus. It also has to stay ahead of the click handling below: it
-    // clears changing_velocity_of_obj, which is what decides whether a click
-    // on this frame ends the drag or re-grabs the cursor for camera panning.
+    // this needs to be here, in between the two if statements otherwise things break
     if ((!app.velocity_cone || app.simulation.current_selected_object == -1) && app.changing_velocity_of_obj)
         app.stop_changing_velocity();
 
     if (!imgui_has_focus) {
-        // The two left-click branches are mutually exclusive on
-        // changing_velocity_of_obj, and both have to stay *after* the velocity
-        // handling above -- that is what sets the flag (on a V press), so the
-        // click that ends a drag gets consumed by stop_changing_velocity
-        // instead of also re-locking the cursor.
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !app.changing_velocity_of_obj) {
             DisableCursor();
             app.camera_pan_enabled = true;
@@ -401,7 +324,7 @@ void handle_events(AppData& app) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && app.changing_velocity_of_obj)
             app.stop_changing_velocity();
 
-        // move the placement plane itself, so an object can be placed off y=0
+        // move the placement plane itself, so an object can be placed off of y=0
         if (app.adding_object) {
             float multiplier = 6;
             if (IsKeyDown(KEY_LEFT_SHIFT))
@@ -416,20 +339,12 @@ void handle_events(AppData& app) {
         if (IsKeyPressed(KEY_K))
             app.settings.paused = !app.settings.paused;
 
-        // Last, because stop_adding_object reallocates the object vector and
-        // invalidates any Object& still live from earlier in the frame.
+        // should be last since it can re-allocate memory which makes it more volatile of function
         if (app.adding_object && IsKeyPressed(KEY_ENTER))
             app.stop_adding_object();
     }
 }
 
-// Steps the simulation and draws one frame of it. Assumes it is called between
-// BeginDrawing and EndDrawing, with handle_events already run for this frame.
-//
-// Nothing in here should read fresh raylib input: edge-triggered reads
-// (IsKeyPressed, IsMouseButtonPressed) are unreliable once the draw has begun
-// on web, and keeping every raw read in handle_events avoids having to decide
-// case by case (see its comment). Use the AppData fields it populated instead.
 void draw_simulation(AppData& app) {
     app.simulation.simulate_physics(app.get_settings_state());
     app.simulation.update_camera(app.camera, app.get_settings_state(), app.camera_pan_enabled, app.mouse_delta, app.mouse_wheel_move);
@@ -437,12 +352,6 @@ void draw_simulation(AppData& app) {
     BeginMode3D(app.camera);
     app.skybox.draw();
 #if defined(__EMSCRIPTEN__)
-    // grid lines, trails, the velocity arrow and its guide line all go
-    // through raylib's immediate-mode batch renderer (rlBegin/rlVertex3f),
-    // which does respect BeginShaderMode -- unlike the textured planet
-    // meshes below, which set their shader directly on the model instead
-    // (see ObjectTextureInfo::load_model). Skybox::draw() binds its own
-    // shader explicitly and ignores this too, so it's unaffected either way.
     BeginShaderMode(get_highp_default_shader());
 #endif
     app.simulation.draw_world(app.camera, app.get_settings_state());
@@ -469,19 +378,7 @@ void draw_simulation(AppData& app) {
         app.velocity_cone = draw_3d_arrow(start, end, cone_height);
 
         if (app.changing_velocity_axis_info) {
-            // Draw a guide line through the arrow's tip along the
-            // locked axis so it's clear which axis the velocity
-            // drag is currently constrained to. Sized relative to
-            // the camera's distance from the tip (just far enough
-            // to fill the view) rather than a large fixed
-            // constant -- DrawLine3D takes float endpoints, and
-            // adding a huge offset to `end` before the
-            // double->float cast destroys the precision of the
-            // (much smaller) tip position, so the line visibly
-            // wobbles as it rounds to different nearby floats
-            // each frame. Same class of issue
-            // camera_offset_from_selected works around for the
-            // mouse-ray math above.
+            // drawing a guide line along the axis
             Vector3Double axis_dir = axis_unit_vector(app.changing_velocity_axis_info->axis);
             double guide_line_extent = Vector3Double{app.camera.position}.distance(end) * 4.0 + 1.0;
             DrawLine3D(
@@ -534,9 +431,6 @@ void draw_simulation(AppData& app) {
         ObjectEditor(app.simulation.current_selected_object, app.simulation.get_object(app.simulation.current_selected_object), app.simulation.get_objects());
 
     if (app.right_click_location) {
-        // OpenPopup resolves its string id through ImGui's current window, so
-        // it can only run inside the ImGui frame -- handle_events, which
-        // detects the click, runs before the frame exists and just sets the flag
         if (app.right_click_menu_should_open) {
             ImGui::OpenPopup("Right Click Menu");
             app.right_click_menu_should_open = false;
@@ -555,8 +449,6 @@ void draw_simulation(AppData& app) {
 }
 
 // One frame: input handling, then internal updates + drawing.
-//
-// handle_events must stay ahead of the drawing -- see the comment on it.
 void update_and_draw(AppData& app) {
     handle_events(app);
 
@@ -565,10 +457,7 @@ void update_and_draw(AppData& app) {
 
     switch (app.app_state) {
         case AppState::PresetSelection:
-            // TODO: draw the preset selection screen and transition to
-            // AppState::Simulation once the user picks one. Its input handling
-            // belongs in handle_events, which currently returns early for
-            // every state but Simulation.
+            // TODO: create a preset selection screen and draw it
             break;
 
         case AppState::Simulation:
@@ -592,16 +481,11 @@ AppData* initialize() {
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Perihelion");
 #if !defined(__EMSCRIPTEN__)
-    // on the web the browser paces us via requestAnimationFrame (the 0 passed
-    // to emscripten_set_main_loop_arg); a target FPS on top of that just makes
-    // EndDrawing burn the leftover time in a wait
     SetTargetFPS(144);
 #endif
     rlImGuiSetup(true);
     IMGUI_CHECKVERSION();
 
-    // after InitWindow: constructing the simulation and skybox loads textures,
-    // models and shaders, which all need a live GL context
     AppData* app_data = new AppData();
 
     // Define the camera to look into our 3d world
@@ -633,10 +517,6 @@ AppData* initialize() {
 }
 
 void quit(AppData* app_data) {
-    // De-Initialization
-    // AppData owns textures, models and shaders (the objects' and the
-    // skybox's), so it has to be destroyed while the GL context is still up --
-    // i.e. before CloseWindow.
     delete app_data;
 
     rlImGuiShutdown();
@@ -653,8 +533,6 @@ int main() {
     AppData* app_data = initialize();
 
 #if defined(__EMSCRIPTEN__)
-    // The browser drives the loop; this call does not return, so there is no
-    // teardown path on the web (the tab closing is the teardown).
     emscripten_set_main_loop_arg(emscripten_frame, app_data, 0, 1);
 #else
     // Main game loop

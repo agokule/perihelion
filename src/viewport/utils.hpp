@@ -21,15 +21,11 @@ struct Cone {
 
 std::optional<Cone> draw_3d_arrow(Vector3Double start, Vector3Double end, double cone_height);
 
-// The velocity arrow's tip, relative to the object it belongs to: offset
-// out to the object's surface in the velocity's direction, then further out
-// by velocity * velocity_arrow_scale. This is also the object-relative
-// frame used to interactively drag the arrow (see main.cpp).
+// get the position of the velocity arrow's tip that should be drawn
 Vector3Double velocity_to_arrow_offset(Vector3Double velocity, double surface_radius, double velocity_arrow_scale);
 
-// Inverse of velocity_to_arrow_offset: recovers the velocity that a given
-// arrow-tip offset (relative to the object) represents. nullopt if the
-// offset is at or inside the object's own surface, i.e. not a valid drag.
+// inverse of velocity_to_arrow_offset
+// ie: x == *arrow_offset_to_velocity(velocity_to_arrow_offset(x))
 std::optional<Vector3Double> arrow_offset_to_velocity(Vector3Double offset, double surface_radius, double velocity_arrow_scale);
 
 enum class Axis {
@@ -38,29 +34,12 @@ enum class Axis {
 
 Vector3Double axis_unit_vector(Axis axis);
 
-// Whether the cursor is currently captured for camera panning (i.e.
-// DisableCursor() is in effect). Use this instead of raylib's
-// IsCursorHidden(): on desktop the two agree, but on web DisableCursor() only
-// *requests* pointer lock and never sets the flag IsCursorHidden() reads, so
-// that stays false forever there. This asks the browser directly instead,
-// which also picks up the lock being released out from under us -- while
-// locked, the browser handles Escape itself, as it does switching tabs.
+// whether the cursor is locked, used instead of Raylib's IsCursorHidden() because it doesn't work on emscripten
 bool is_cursor_locked();
 
-// raylib's GetMouseDelta(), scaled on web so a given physical mouse movement
-// pans the camera about as far as it does on desktop. Use this everywhere
-// instead of calling GetMouseDelta() directly, so both camera modes stay in
-// step.
 Vector2 get_mouse_delta();
 
-// A drop-in replacement for raylib's built-in default shader, but with the
-// vertex stage's position math forced to highp float instead of raylib's
-// actual mediump default on GRAPHICS_API_OPENGL_ES2 (see
-// assets/shaders/glsl100/default_highp.vs for why that matters on web).
-// Lazily loaded on first call and cached for the life of the app; only
-// meaningful once there's a live GL context (i.e. after InitWindow), and a
-// no-op to call on native -- callers should guard use with
-// `#if defined(__EMSCRIPTEN__)`, since native GL33 has no precision
-// qualifiers to work around and doesn't need this.
+// a shader that is explicitly set to higher resolution, because Raylib by default uses a lower resolution shader on emscripten
+// NOTE: should not be run on non-emscripten builds
 Shader get_highp_default_shader();
 
