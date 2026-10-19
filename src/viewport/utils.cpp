@@ -141,6 +141,7 @@ bool is_cursor_locked() {
 
 Vector2 get_mouse_delta() {
 #if defined(__EMSCRIPTEN__)
+
     // Pointer-locked movement on web comes out about twice as large as
     // GLFW's raw mouse motion on desktop for the same physical movement.
     // Not a HiDPI effect -- it was tuned on a display with a
@@ -148,7 +149,13 @@ Vector2 get_mouse_delta() {
     // include OS pointer acceleration, which desktop's raw, unaccelerated
     // motion doesn't. The factor was tuned by feel rather than derived, so
     // revisit it if web panning speed drifts on other setups.
+#ifdef DEBUG
+    // for some reason the emscripten debug build report mouse movement as doubled
     constexpr float web_mouse_delta_scale = 0.5f;
+#else
+    constexpr float web_mouse_delta_scale = 1;
+#endif
+
     return GetMouseDelta() * web_mouse_delta_scale;
 #else
     return GetMouseDelta();
