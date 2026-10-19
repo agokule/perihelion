@@ -12,7 +12,7 @@
 #include "ui/imgui_ui_utils.hpp"
 #include "viewport/camera.hpp"
 
-// disable rlImGui's font awesom
+// disable rlImGui's font awesome
 #define NO_FONT_AWESOME
 #include "rlImGui.h"
 
