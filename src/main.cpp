@@ -1,7 +1,7 @@
 #include "FontIcons.hpp"
 #include "Preset.hpp"
 #include "physics/Object.hpp"
-#include "Vector3Double.hpp"
+#include "physics/Vector3Double.hpp"
 #include "physics/settings.hpp"
 #include "raylib.h"
 #include "imgui.h"

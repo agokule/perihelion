@@ -2,8 +2,9 @@
 #include "physics/Constants.hpp"
 #include "FontIcons.hpp"
 #include "physics/Object.hpp"
-#include "Spherical.hpp"
-#include "Vector3Double.hpp"
+#include "physics/Spherical.hpp"
+#include "physics/Vector3Double.hpp"
+#include "physics/conversions.hpp"
 #include "ui/DragVelocity.hpp"
 #include "ui/ObjectSelectorCombo.hpp"
 #include "ui/imgui_ui_utils.hpp"
@@ -99,9 +100,9 @@ bool ObjectEditor(int obj_idx, Object& obj, std::vector<Object>& objs) {
     ImGui::RadioButton("Polar", (int*)&velocity_type, (int)VelocityType::Polar);
 
     if (velocity_type == VelocityType::Polar) {
-        Spherical velocity_polar = to_spherical(obj.velocity);
+        Spherical velocity_polar = vector3_to_spherical(obj.velocity);
         DragVelocity(velocity_polar);
-        obj.velocity = to_cartesian(velocity_polar);
+        obj.velocity = spherical_to_vector3(velocity_polar);
     } else {
         DragVelocity(obj.velocity);
     }

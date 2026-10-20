@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Spherical.hpp"
-#include "Vector3Double.hpp"
+#include "physics/Spherical.hpp"
+#include "physics/Vector3Double.hpp"
 
 enum class VelocityType : int {
     Cartesian,

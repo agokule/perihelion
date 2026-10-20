@@ -110,7 +110,7 @@ void DragVelocity(Spherical& velocity) {
 
     ImGui::Text(NF_FA_PERSON_RUNNING " Velocity:");
 
-    if (fold_colatitude(value.colatitude)) {
+    if (value.fold_colatitude()) {
         value.longitude += pi;
         flipped = !flipped;
     }

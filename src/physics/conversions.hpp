@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Spherical.hpp"
+#include "Vector3Double.hpp"
+
 constexpr float light_seconds_meters_conversion_factor = 299'792'458.0f;
 
 template<typename T>
@@ -10,4 +13,7 @@ template<typename T>
 T convert_meters_to_light_seconds(T meters) {
     return meters / light_seconds_meters_conversion_factor;
 }
+
+Spherical vector3_to_spherical(Vector3Double v);
+Vector3Double spherical_to_vector3(Spherical s);
 

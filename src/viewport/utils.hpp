@@ -1,5 +1,5 @@
 #pragma once
-#include "Vector3Double.hpp"
+#include "physics/Vector3Double.hpp"
 #include <optional>
 #include <raylib.h>
 #include <raymath.h>
