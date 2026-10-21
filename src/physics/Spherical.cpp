@@ -6,7 +6,15 @@ using std::numbers::pi;
 
 bool Spherical::fold_colatitude() {
     colatitude = std::fmod(colatitude, 2 * pi);
-    return colatitude < 0.0 || colatitude > pi;
+    if (colatitude < 0)
+        colatitude += 2 * pi;
+
+    if (colatitude > pi) {
+        colatitude = 2 * pi - colatitude;
+        return true;
+    }
+
+    return false;
 }
 
 double wrap_angle(double angle) {
