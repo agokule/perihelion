@@ -6,6 +6,8 @@ big plans to turn it into a full on clone of Universe Sandbox on the web!
 
 I was inspired by [this YouTube video](https://www.youtube.com/watch?v=_YbGWoUaZg0).
 
+Watch the [demo video](https://youtu.be/h0ak9L7gRxo).
+
 ## How to use it
 
 1. Open the app in your browser. [Here is the link.](https://agokule.github.io/perihelion/)
