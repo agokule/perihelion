@@ -114,7 +114,7 @@ void Object::accelerate(Vector3Double acceleration, double delta_time) {
 }
 
 void Object::update_pos(double delta_time) {
-    if (previous_positions.empty() || position.distance(previous_positions.back()) > 0.05f)
+    if (previous_positions.empty() || position.distance(previous_positions.back()) > 0.05)
         previous_positions.push_back(position.to_vector3());
     if (previous_positions.size() > 150)
         previous_positions.pop_front();
@@ -158,6 +158,9 @@ void Object::draw_trail() const {
     auto sz = previous_positions.size();
     if (sz == 0)
         return;
+
+    // just in case the start point of the trail is outside the planet' boundaries
+    DrawLine3D(position.to_vector3(), *std::prev(previous_positions.cend()), WHITE);
 
     for (auto it = std::next(previous_positions.cbegin()); it != previous_positions.cend(); it++) {
         auto idx = it - previous_positions.cbegin();
