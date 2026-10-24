@@ -64,7 +64,7 @@ void SimulationScreen::simulate_physics(const SimulationSettings& settings) {
     for (int i = 0; i < settings.substeps_per_frame; i++) {
         for (Object& obj : scene.objects) {
             for (Object& obj2 : scene.objects) {
-                if (obj2.name == obj.name)
+                if (&obj == &obj2)
                     continue;
 
                 double distance = (obj.position.distance(obj2.position));
